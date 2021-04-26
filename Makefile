@@ -1,10 +1,10 @@
 .PHONY: clean
 
-boot.bin: boot.asm
-	nasm -f bin -o boot.bin boot.asm
+hello.bin: hello.asm
+	nasm -f bin -o hello.bin hello.asm
 
-run: boot.bin
-	qemu-system-x86_64 -drive format=raw,file=boot.bin
+hello: hello.bin
+	qemu-system-x86_64 -drive format=raw,file=hello.bin
 
 clean:
-	rm boot.bin
+	rm *.bin
