@@ -1,10 +1,16 @@
 .PHONY: clean
 
-hello.bin: hello.asm
-	nasm -f bin -o hello.bin hello.asm
+bootloader.bin: bootloader.asm
+	nasm -f bin -o bootloader.bin bootloader.asm
 
-hello: hello.bin
-	qemu-system-x86_64 -drive format=raw,file=hello.bin
+kernel.bin: kernel.asm
+	nasm -f bin -o kernel.bin kernel.asm
+
+image.bin: bootloader.bin kernel.bin
+	cat bootloader.bin kernel.bin > image.bin
+
+run: image.bin
+	qemu-system-x86_64 -drive format=raw,file=image.bin
 
 clean:
 	rm *.bin
