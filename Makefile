@@ -1,16 +1,13 @@
 .PHONY: clean
 
-bootloader.bin: bootloader.asm
-	nasm -f bin -o bootloader.bin bootloader.asm
+bootloader.o: bootloader.asm
+	nasm -f elf32 -o bootloader.o bootloader.asm
 
-kernel.bin: kernel.asm src/io.asm src/decimal.asm
-	nasm -f bin -o kernel.bin kernel.asm
-
-image.bin: bootloader.bin kernel.bin
-	cat bootloader.bin kernel.bin > image.bin
+image.bin: kernel.cpp bootloader.o
+	i386-elf-gcc -m32 kernel.cpp bootloader.o -o image.bin -nostdlib -ffreestanding -std=c++11 -mno-red-zone -fno-exceptions -nostdlib -fno-rtti -Wall -Wextra -Werror -T linking.ld
 
 run: image.bin
 	qemu-system-x86_64 -drive format=raw,file=image.bin
 
 clean:
-	rm *.bin
+	rm -f *.bin *.o

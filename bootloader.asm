@@ -1,5 +1,9 @@
-bits 16    ; use 16 bits
-org 0x7c00 ; set the starting address
+section .boot
+bits 16
+
+; Define global symbol for the linker
+global boot
+boot:
 
 ; Reset disk system
 mov ah, 0
@@ -7,7 +11,7 @@ int 0x13 ; dl = drive number (already set by the BIOS)
 
 ; Read from hard drive and write to RAM
 mov bx, kernel_copy_target  ; bx = address to write the kernel to
-mov al, 1 		  ; al = number of sectors to read
+mov al, 6 		  ; al = number of sectors to read
 mov ch, 0       ; cylinder/track = 0
 mov dh, 0       ; head           = 0
 mov cl, 2       ; sector         = 2
@@ -80,3 +84,24 @@ dw 0xaa55
 
 ; Kernel code will be copied here
 kernel_copy_target:
+
+bits 32
+
+; Update stack pointer
+mov esp, kernel_stack_top
+
+; Execute kernel code
+extern kmain
+call kmain
+
+; Halt
+cli
+hlt
+
+; Allocate 16KB of stack space in 0-filled section
+section .bss
+align 4
+
+kernel_stack_bottom: equ $
+resb 16384 ; 16 KB
+kernel_stack_top:
