@@ -3,7 +3,7 @@
 bootloader.bin: bootloader.asm
 	nasm -f bin -o bootloader.bin bootloader.asm
 
-kernel.bin: kernel.asm src/io.asm src/convert.asm
+kernel.bin: kernel.asm src/io.asm src/decimal.asm
 	nasm -f bin -o kernel.bin kernel.asm
 
 image.bin: bootloader.bin kernel.bin

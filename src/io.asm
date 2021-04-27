@@ -42,18 +42,11 @@ printLn:
 ; FUNCTION
 ; Clear the terminal screen.
 clearScreen:
-  pusha
-  mov ax, 0x0700  ; function 07 = scroll window down, AL=0 means scroll whole window
-  mov bh, 0x07    ; character attribute = white on black
-  mov cx, 0x0000  ; row = 0, col = 0 - upper left corner coords
-  mov dx, 0x184f  ; row = 24 (0x18), col = 79 (0x4f) - lower right corner coords
-  int 0x10
-
-  mov bh, 0 ; page to write to
-  mov dx, 0 ; DH: row, DL: column (0, 0)
-  mov ah, 2 ; function 02 = set cursor position
-  int 0x10
-  popa
+  push ax
+  mov al, 2 ; Set video mode to 80x25
+  mov ah, 0
+  int 0x10  ; int 0x10, 0 => change VGA mode
+  pop ax
   ret
 ; END
 

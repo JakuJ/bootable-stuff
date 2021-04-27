@@ -32,7 +32,8 @@ halt:
   call printLn
   hlt ; halt the system
 
-%include "src/convert.asm"
+%include "src/io.asm"
+%include "src/decimal.asm"
 
 section .bss
 

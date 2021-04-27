@@ -1,5 +1,3 @@
-%include "src/io.asm"
-
 ; FUNCTION
 ; Convert decimal string to number.
 ; Inputs:
@@ -55,14 +53,26 @@ printDecimal:
   xor dx, dx
   %endrep
 
-  ; who needs loops anyway
-  %rep 5
-  pop ax
-  add al, '0'
-  call putChar
-  %endrep
-
-  pop dx
-  pop cx
-  ret
+  mov bx, 0 ; 0 - leading zeros, 1 - no longer leading zeros
+  mov cx, 5 ; counter
+  .loop:
+    ; loop counter management
+    jcxz .end
+    dec cx
+    ; pop nex digit and check if zero
+    pop ax
+    cmp ax, 0
+    je .leading
+    ; not leading
+    or bx, 1
+    .leading:
+    cmp bx, 1
+    jne .loop ; if leading zero, skip it
+    add al, '0'
+    call putChar
+  jmp .loop
+  .end:
+    pop dx
+    pop cx
+    ret
 ; END
