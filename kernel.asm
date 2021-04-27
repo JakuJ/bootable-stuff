@@ -1,46 +1,21 @@
-bits 16
-org 0x8000 ; set the starting address
+bits 32
+org 0x7e00            ; bootloader offset (0x7c00) + 1 sector
 
-section .text
-call clearScreen
-
-start:
-  ; Print message
-  mov si, msg
-  call putStr
-
-  ; Read input
-  call readString
-
-  ; Parse input
-  mov si, di
-  call decstr2num
+mov esi, hello
+mov ebx, 0xb8000      ; VGA buffer address
+.loop:
+  lodsb
+  or al, al           ; check for \0
   jz halt
-
-  ; Print doubled
-  mov ax, dx
-  imul ax, 2
-  call printDecimal
-  call printLn
-jmp start
-
+  or eax, 0x0f00      ; VGA payload: BG color (4 bits), FG color (4 bits), ASCII char (1 byte)
+  mov word [ebx], ax  ; print to screen by writing directly to VGA buffer
+  add ebx, 2          ; move to next space in the buffer
+jmp .loop
 halt:
-  ; Announce halting
-  mov si, halted
-  call putStr
-  hlt ; halt the system
+  cli
+  hlt
 
-%include "src/io.asm"
-%include "src/decimal.asm"
-
-section .bss
-
-readString_buffer: resb (readString_size+1)
-
-section .rodata
-
-msg db "Enter number to be doubled: ", 0
-halted db "Halted!", 0x0d, 0x0a, 0
+hello: db "Hello world from another sector!", 0x0a, 0
 
 ; Padding
-times 512-($-$$) db 0 ; kernel must have size multiple of 512 so let's pad it to the correct size
+times 1024-($-$$) db 0 ; kernel must have size multiple of 512

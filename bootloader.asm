@@ -6,13 +6,13 @@ mov ah, 0
 int 0x13 ; dl = drive number (already set by the BIOS)
 
 ; Read from hard drive and write to RAM
-mov bx, 0x8000  ; bx = address to write the kernel to
+mov bx, kernel_copy_target  ; bx = address to write the kernel to
 mov al, 1 		  ; al = number of sectors to read
 mov ch, 0       ; cylinder/track = 0
 mov dh, 0       ; head           = 0
 mov cl, 2       ; sector         = 2
 mov ah, 2       ; ah = 2: read from drive
-int 0x13   		  ; => ah = status, al = amount read
+int 0x13   		  ; Sets: ah = status, al = amount read
 
 ; Disable interrupts
 cli
@@ -30,35 +30,16 @@ mov eax, cr0
 or al, 1
 mov cr0, eax
 
+; Set the remaining segments to point at the data segment
+mov ax, DATA_SEG
+mov ds, ax
+mov es, ax
+mov fs, ax
+mov gs, ax
+mov ss, ax
+
 ; Transfer control to the kernel
-jmp KERNEL_SEG:kernel
-
-bits 32
-kernel:
-  ; Set the remaining segments to point at the data segment
-  mov ax, DATA_SEG
-  mov ds, ax
-  mov es, ax
-  mov fs, ax
-  mov gs, ax
-  mov ss, ax
-
-  ; Print something to see if kernel loads in 32 bit
-  mov esi, hello
-  mov ebx, 0xb8000 ; VGA text buffer location
-  .loop:
-    lodsb
-    or al, al
-    jz halt
-    or eax, 0x0f00      ; BG color (4 bits), FG color (4 bits), ASCII character (byte)
-    mov word [ebx], ax  ; "print" by writing to VGA buffer
-    add ebx, 2          ; move to next space in buffer
-    jmp .loop
-  halt:
-    cli
-    hlt
-
-hello: db "Hello from 32 bits!", 0x0a, 0
+jmp KERNEL_SEG:kernel_copy_target
 
 ; Define GDT
 gdt_start:
@@ -91,8 +72,11 @@ gdt_pointer:
 KERNEL_SEG equ gdt_kernel - gdt_start
 DATA_SEG equ gdt_data - gdt_start
 
-; Fill the rest of the binary with zeros
+; Fill the rest of the bootloader binary with zeros
 times 510-($-$$) db 0
 
 ; Write MBR signature
 dw 0xaa55
+
+; Kernel code will be copied here
+kernel_copy_target:
