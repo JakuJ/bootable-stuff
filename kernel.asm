@@ -1,8 +1,7 @@
-bits 16    ; use 16 bits
+bits 16
 org 0x8000 ; set the starting address
 
 section .text
-
 call clearScreen
 
 start:
@@ -29,7 +28,6 @@ halt:
   ; Announce halting
   mov si, halted
   call putStr
-  call printLn
   hlt ; halt the system
 
 %include "src/io.asm"
@@ -42,7 +40,7 @@ readString_buffer: resb (readString_size+1)
 section .rodata
 
 msg db "Enter number to be doubled: ", 0
-halted db "Halted!", 0
+halted db "Halted!", 0x0d, 0x0a, 0
 
 ; Padding
 times 512-($-$$) db 0 ; kernel must have size multiple of 512 so let's pad it to the correct size
