@@ -1,5 +1,6 @@
 #include "assertions.hpp"
 #include "vga.hpp"
+#include "stdlib/type_traits.hpp"
 
 // Kernel entry point
 extern "C" void kmain() {
@@ -8,9 +9,12 @@ extern "C" void kmain() {
 
     // Welcome user
     vga.clearScreen();
-    vga.putStr("Kernel loaded\n");
+    vga.putStr("Kernel loaded\n\n");
 
     // Run diagnostics
     chackAssertions();
-    vga.putStr("Diagnostics passed");
+    vga.putStr("Diagnostics passed\n\n");
+
+    // Test printf
+    vga.printf("Hello, ", 3, '+', 4u, '-', 1l, '=', (short) 6);
 }

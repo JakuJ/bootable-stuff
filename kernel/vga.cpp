@@ -1,6 +1,6 @@
 #include "vga.hpp"
 
-short *const VGA::FRAMEBUFFER = (short *) (0xb8000);
+short *const VGA::FRAMEBUFFER = reinterpret_cast<short *>(0xb8000);
 
 void VGA::clearScreen() {
     cursorX = cursorY = 0;
@@ -46,4 +46,14 @@ void VGA::putStr(const char *str) {
     for (size_t i = 0; i < strlen(str); i++) {
         putChar(str[i]);
     }
+}
+
+template<>
+void VGA::print(char c) {
+    putChar(c);
+}
+
+template<>
+void VGA::print(const char *str) {
+    putStr(str);
 }

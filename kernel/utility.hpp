@@ -2,6 +2,10 @@
 
 typedef unsigned long size_t;
 
-constexpr size_t strlen(const char *str) {
-    return *str ? 1 + strlen(str + 1) : 0;
+constexpr auto strlen(const char *str) {
+    const char *s = str;
+    while (*s) {
+        s++;
+    }
+    return static_cast<size_t>(s - str);
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utility.hpp"
+
 static void checkTypeSizes() {
     // 8-bit types
     static_assert(sizeof(bool) == 1);
@@ -25,6 +27,13 @@ static void checkTypeSizes() {
     static_assert(sizeof(long double) == 12);
 }
 
+void strlenTest() {
+    static_assert(strlen("\0") == 0);
+    static_assert(strlen("Hello") == 5);
+    static_assert(strlen("Hi there\n") == 9);
+}
+
 void chackAssertions() {
     checkTypeSizes();
+    strlenTest();
 }
