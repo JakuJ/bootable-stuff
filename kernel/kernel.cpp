@@ -1,10 +1,16 @@
+#include "assertions.hpp"
+#include "vga.hpp"
+
 // Kernel entry point
 extern "C" void kmain() {
-    const short color = 0x1f00; // white on blue
-    const char hello[] = "Hello world from the kernel!";
-    short *vga = (short *) 0xb8000;
+    // Initialize resources
+    VGA vga;
 
-    for (int i = 0; i < (int) sizeof(hello); ++i) {
-        vga[i + 10 * 80] = color | hello[i]; // write to 10th row
-    }
+    // Welcome user
+    vga.clearScreen();
+    vga.putStr("Kernel loaded\n");
+
+    // Run diagnostics
+    chackAssertions();
+    vga.putStr("Diagnostics passed");
 }

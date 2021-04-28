@@ -31,10 +31,10 @@ int 10h
 mov si, title
 call putStr
 
-; Move cursor to the middle
+; Move cursor to the second line
 mov ah, 2
 mov bh, 0
-mov dh, 12d
+mov dh, 1
 int 10h
 
 ; Print the other message
