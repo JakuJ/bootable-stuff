@@ -11,7 +11,7 @@ int 0x13 ; dl = drive number (already set by the BIOS)
 
 ; Read from hard drive and write to RAM
 mov bx, kernel_copy_target  ; bx = address to write the kernel to
-mov al, 6 		  ; al = number of sectors to read
+mov al, 20d 		; al = number of sectors to read
 mov ch, 0       ; cylinder/track = 0
 mov dh, 0       ; head           = 0
 mov cl, 2       ; sector         = 2
