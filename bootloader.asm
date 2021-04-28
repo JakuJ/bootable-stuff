@@ -18,6 +18,34 @@ mov cl, 2       ; sector         = 2
 mov ah, 2       ; ah = 2: read from drive
 int 0x13   		  ; Sets: ah = status, al = amount read
 
+; DISPLAY SPLASH SCREEN
+call clearScreen
+
+; Move cursor to the top
+mov ah, 2
+mov bh, 0
+mov dx, 0
+int 10h
+
+; Print welcome message
+mov si, title
+call putStr
+
+; Move cursor to the middle
+mov ah, 2
+mov bh, 0
+mov dh, 12d
+int 10h
+
+; Print the other message
+mov si, msg
+call putStr
+
+; Wait for user input
+call readString
+
+; ENTER 32-bit PROTECTED MODE
+
 ; Disable interrupts
 cli
 
@@ -76,6 +104,13 @@ gdt_pointer:
 KERNEL_SEG equ gdt_kernel - gdt_start
 DATA_SEG equ gdt_data - gdt_start
 
+; Include other functions
+%include "src/io.asm"
+
+; Data
+title db "Bootloader v1.0", 0
+msg db "Press ENTER to load the kernel...", 0
+
 ; Fill the rest of the bootloader binary with zeros
 times 510-($-$$) db 0
 
@@ -98,10 +133,13 @@ call kmain
 cli
 hlt
 
-; Allocate 16KB of stack space in 0-filled section
 section .bss
 align 4
 
+; Buffer for IO operations
+readString_buffer: resb (readString_size+1)
+
+; Allocate 16KB of stack space in 0-filled section
 kernel_stack_bottom: equ $
 resb 16384 ; 16 KB
 kernel_stack_top:

@@ -5,9 +5,9 @@
 putChar:
   push bx
   mov bh, 0x00 ; page to write to, page 0 is displayed by default
-  mov bl, 0x00 ; color attribute, doesn't matter for now
-  mov ah, 0x0E ; function 0E = print character in al
-  int 0x10
+  mov bl, 0x1f ; color attribute, white on blue
+  mov ah, 0x0e ; function 0e = print character in al
+  int 10h
   pop bx
   ret
 ; END
@@ -43,12 +43,43 @@ printLn:
 
 ; FUNCTION
 ; Clear the terminal screen.
+; Sets white on blue as colors.
 clearScreen:
-  push ax
-  mov al, 2 ; Set video mode to 80x25
-  mov ah, 0
-  int 0x10  ; int 0x10, 0 => change VGA mode
-  pop ax
+  mov ax, 0x0600
+  mov bh, 0x1f
+  mov cx, 0x0000
+  mov dh, 24d
+  mov dl, 79d
+  int 10h
+  ret
+; END
+
+; FUNCTION
+; Draws a square in pixel video mode.
+; Inputs:
+; al = color
+; cx = xpos
+; dx = ypos
+; si = x-length
+; di = y-length
+drawSquare:
+  push si
+  .for_x:
+    push di
+    .for_y:
+      pusha
+      mov bh, 0     ; page to write to
+      add cx, si    ; x-position
+      add dx, di    ; y-position
+      mov ah, 0xC
+      int 10h      ; interrupt 0x10, C - draw pixel to screen
+      popa
+    sub di, 1
+    jnz .for_y
+    pop di
+  sub si, 1
+  jnz .for_x
+  pop si
   ret
 ; END
 

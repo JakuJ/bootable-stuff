@@ -1,6 +1,6 @@
 .PHONY: clean
 
-bootloader.o: bootloader.asm
+bootloader.o: bootloader.asm src/io.asm
 	nasm -f elf32 -o bootloader.o bootloader.asm
 
 image.bin: kernel.cpp bootloader.o

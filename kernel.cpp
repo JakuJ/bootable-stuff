@@ -1,7 +1,7 @@
 // Kernel entry point
 extern "C" void kmain() {
-    const short color = 0x0F00; // white
-    const char hello[] = "Hello world from C++!";
+    const short color = 0x1f00; // white
+    const char hello[] = "Hello world from the kernel!";
     short *vga = (short *) 0xb8000;
 
     for (int i = 0; i < (int) sizeof(hello); ++i) {
