@@ -1,6 +1,6 @@
-#include "assertions.hpp"
-#include "vga.hpp"
-#include "stdlib/type_traits.hpp"
+#include "../include/assertions.hpp"
+#include "../include/vga.hpp"
+#include "../../stdlib/type_traits.hpp"
 
 // Kernel entry point
 extern "C" void kmain() {

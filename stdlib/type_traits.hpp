@@ -1,8 +1,11 @@
 #pragma once
 
-#include "../macro_foreach.hpp"
+#include "macro_foreach.hpp"
 
 namespace std {
+
+    struct dummy_type {
+    };
 
     struct false_type {
         static const bool value = false;
