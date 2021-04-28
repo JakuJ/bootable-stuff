@@ -6,7 +6,7 @@ void VGA::clearScreen() {
     cursorX = cursorY = 0;
     for (size_t x = 0; x < TT_COLUMNS; x++) {
         for (size_t y = 0; y < TT_ROWS; y++) {
-            putChar(' ');
+            print(' ');
         }
     }
 }
@@ -24,7 +24,8 @@ void VGA::ensureCursorInRange() {
     }
 }
 
-void VGA::putChar(const char c) {
+template<>
+void VGA::print_impl(const char c, ...) {
     switch (c) {
         case '\r':
             cursorX = 0;
@@ -42,20 +43,11 @@ void VGA::putChar(const char c) {
     }
 }
 
-void VGA::putStr(const char *str) {
-    for (size_t i = 0; i < strlen(str); i++) {
-        putChar(str[i]);
-    }
-}
-
-template<>
-void VGA::print_impl(char c, ...) {
-    putChar(c);
-}
-
 template<>
 void VGA::print_impl(const char *str, ...) {
-    putStr(str);
+    for (size_t i = 0; i < strlen(str); i++) {
+        print(str[i]);
+    }
 }
 
 template<>

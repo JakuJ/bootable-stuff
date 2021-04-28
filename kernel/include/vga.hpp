@@ -18,10 +18,6 @@ class VGA {
 public:
     void clearScreen();
 
-    void putChar(const char c);
-
-    void putStr(const char *str);
-
     template<typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
     void print_impl(T num, std::dummy_type) {
         if (num < 0) {
@@ -29,23 +25,23 @@ public:
             print(-num);
         } else if (num > 0) {
             print(num / 10);
-            putChar('0' + static_cast<char>(num % 10));
+            print<char>('0' + (num % 10));
         }
     }
 
     template<typename T, std::enable_if_t<std::is_floating<T>::value, bool> = true>
     void print_impl(T num, std::dummy_type) {
         if (num < 0) {
-            putChar('-');
+            print('-');
             print(-num);
         } else if (num > 0) {
             // print decimal part
             long dec = static_cast<long>(num);
             print(dec);
             // print fractional part
-            putChar('.');
+            print('.');
             T frac = num - dec;
-            print(static_cast<long>(frac * 100000)); // arbitrary
+            print<long>(frac * 100000); // arbitrary
         }
     }
 
