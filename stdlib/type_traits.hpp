@@ -21,7 +21,16 @@ namespace std {
 
 #define GEN_INTEGRAL(type) template<> struct is_integral<type> : public true_type { };
 
-    FOR_EACH(GEN_INTEGRAL, short, int, unsigned, long, unsigned long, long long, unsigned long long)
+    FOR_EACH(GEN_INTEGRAL, short, int, unsigned)
+    FOR_EACH(GEN_INTEGRAL, long, unsigned long, long long, unsigned long long)
+
+    template<typename>
+    struct is_floating : public false_type {
+    };
+
+#define GEN_FLOATING(type) template<> struct is_floating<type> : public true_type { };
+
+    FOR_EACH(GEN_FLOATING, float, double, long double)
 
     template<bool, typename T = void>
     struct enable_if {

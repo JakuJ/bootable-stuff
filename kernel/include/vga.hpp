@@ -24,9 +24,28 @@ public:
 
     template<typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
     void print_impl(T num, std::dummy_type) {
-        if (num > 0) {
-            printf(num / 10);
+        if (num < 0) {
+            print('-');
+            print(-num);
+        } else if (num > 0) {
+            print(num / 10);
             putChar('0' + static_cast<char>(num % 10));
+        }
+    }
+
+    template<typename T, std::enable_if_t<std::is_floating<T>::value, bool> = true>
+    void print_impl(T num, std::dummy_type) {
+        if (num < 0) {
+            putChar('-');
+            print(-num);
+        } else if (num > 0) {
+            // print decimal part
+            long dec = static_cast<long>(num);
+            print(dec);
+            // print fractional part
+            putChar('.');
+            T frac = num - dec;
+            print(static_cast<long>(frac * 100000)); // arbitrary
         }
     }
 
@@ -34,13 +53,13 @@ public:
     void print_impl(T, ...);
 
     template<typename T, typename ...Args>
-    void printf(T t, Args... args) {
-        printf(t);
-        printf(args...);
+    void print(T t, Args... args) {
+        print(t);
+        print(args...);
     }
 
     template<typename T>
-    void printf(T t) {
+    void print(T t) {
         print_impl(t, std::dummy_type());
     }
 };

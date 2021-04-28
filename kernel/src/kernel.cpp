@@ -9,12 +9,14 @@ extern "C" void kmain() {
 
     // Welcome user
     vga.clearScreen();
-    vga.putStr("Kernel loaded\n\n");
+    vga.print("Kernel loaded\n\n");
 
     // Run diagnostics
     chackAssertions();
-    vga.putStr("Diagnostics passed\n\n");
+    vga.print("Diagnostics passed\n\n");
 
     // Test printf
-    vga.printf("Hello, ", 12, '*', 42u, '-', 1l, '=', (short) 503);
+    vga.print(-12, '*', 42u, '-', 1l, '=', (short) -505, '\n');
+    vga.print(3.1415f, '*', -12.56, '=', -39.45724, '\n');
+    vga.print(true);
 }

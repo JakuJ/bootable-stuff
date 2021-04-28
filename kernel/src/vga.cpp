@@ -57,3 +57,12 @@ template<>
 void VGA::print_impl(const char *str, ...) {
     putStr(str);
 }
+
+template<>
+void VGA::print_impl(bool b, ...) {
+    if (b) {
+        print("true");
+    } else {
+        print("false");
+    }
+}
