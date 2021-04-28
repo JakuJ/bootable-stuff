@@ -22,15 +22,16 @@ public:
 
     void putStr(const char *str);
 
-    template<typename T>
-    typename std::enable_if<std::is_integer<T>::value>::type
-    print(T num) {
-        putChar('0' + (char) num);
+    template<typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
+    void print(T num, int) {
+        if (num > 0) {
+            print(num / 10, 0);
+            putChar('0' + static_cast<char>(num % 10));
+        }
     }
 
     template<typename T>
-    typename std::enable_if<!std::is_integer<T>::value>::type
-    print(T);
+    void print(T, ...);
 
     template<typename T, typename ...Args>
     void printf(T t, Args... args) {
@@ -40,6 +41,6 @@ public:
 
     template<typename T>
     void printf(T t) {
-        print(t);
+        print(t, 0);
     }
 };

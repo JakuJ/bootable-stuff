@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../macro_foreach.hpp"
+
 namespace std {
 
     struct false_type {
@@ -11,29 +13,22 @@ namespace std {
     };
 
     template<typename>
-    struct __is_integral_helper : public false_type {
+    struct is_integral : public false_type {
     };
 
-#define GEN_INTEGER(type) template<> struct __is_integral_helper<type> : public true_type { };
+#define GEN_INTEGRAL(type) template<> struct is_integral<type> : public true_type { };
 
-    GEN_INTEGER(short)
-    GEN_INTEGER(int)
-    GEN_INTEGER(unsigned)
-    GEN_INTEGER(long)
-    GEN_INTEGER(unsigned long)
-    GEN_INTEGER(long long)
-    GEN_INTEGER(unsigned long long)
+    FOR_EACH(GEN_INTEGRAL, short, int, unsigned, long, unsigned long, long long, unsigned long long)
 
-    template<typename T>
-    struct is_integer : public __is_integral_helper<T> {
-    };
-
-    template<bool, typename _Tp = void>
+    template<bool, typename T = void>
     struct enable_if {
     };
 
-    template<typename _Tp>
-    struct enable_if<true, _Tp> {
-        typedef _Tp type;
+    template<typename T>
+    struct enable_if<true, T> {
+        typedef T type;
     };
+
+    template<bool B, class T = void>
+    using enable_if_t = typename enable_if<B, T>::type;
 }

@@ -16,5 +16,5 @@ extern "C" void kmain() {
     vga.putStr("Diagnostics passed\n\n");
 
     // Test printf
-    vga.printf("Hello, ", 3, '+', 4u, '-', 1l, '=', (short) 6);
+    vga.printf("Hello, ", 12, '*', 42u, '-', 1l, '=', (short) 503);
 }

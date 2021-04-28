@@ -49,11 +49,11 @@ void VGA::putStr(const char *str) {
 }
 
 template<>
-void VGA::print(char c) {
+void VGA::print(char c, ...) {
     putChar(c);
 }
 
 template<>
-void VGA::print(const char *str) {
+void VGA::print(const char *str, ...) {
     putStr(str);
 }
