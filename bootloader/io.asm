@@ -55,35 +55,6 @@ clearScreen:
 ; END
 
 ; FUNCTION
-; Draws a square in pixel video mode.
-; Inputs:
-; al = color
-; cx = xpos
-; dx = ypos
-; si = x-length
-; di = y-length
-drawSquare:
-  push si
-  .for_x:
-    push di
-    .for_y:
-      pusha
-      mov bh, 0     ; page to write to
-      add cx, si    ; x-position
-      add dx, di    ; y-position
-      mov ah, 0xC
-      int 10h      ; interrupt 0x10, C - draw pixel to screen
-      popa
-    sub di, 1
-    jnz .for_y
-    pop di
-  sub si, 1
-  jnz .for_x
-  pop si
-  ret
-; END
-
-; FUNCTION
 ; Reads a single character from keyboard.
 ; Outputs:
 ; al = character read (ASCII)
@@ -150,25 +121,4 @@ readString:
     ; set output to buffer beginning
     mov di, readString_buffer
     ret
-; END
-
-; FUNCTION
-; Compare whether two strings are equal.
-; Inputs:
-; di = first string
-; si = second string
-; Outputs:
-; zf = 1 if equal
-stringCompare:
-  pusha
-  or cx, -1   ; set cx to biggest unsigned number
-  xor al, al  ; clear al
-  repne scasb ; scan through di until zero terminator was hit and decrease cx for each scanned character
-  neg cx      ; calculate length of di by negating cx which returns the length of the string including zero terminator
-  sub di, cx  ; reset di by setting it to the original index it started with
-  inc di
-  repe cmpsb  ; check if character from di match with si (including zero terminator)
-  test cx, cx ; test if number of matching = size of string, set zero flag if equals
-  popa
-  ret
 ; END
