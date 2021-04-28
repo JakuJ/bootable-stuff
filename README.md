@@ -24,4 +24,4 @@ to build the image and boot it in QEMU.
 
 ## Current state
 
-![hello world](docs/hello.png)
+![](docs/current.gif)
