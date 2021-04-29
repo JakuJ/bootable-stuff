@@ -11,13 +11,13 @@ VGA::VGA(unsigned int minColumn, unsigned int maxColumn, unsigned int minRow, un
 }
 
 void VGA::clearScreen() {
+    cursorX = colMin;
+    cursorY = rowMin;
     for (auto x = colMin; x < colMax; x++) {
         for (auto y = rowMin; y < rowMax; y++) {
             print(' ');
         }
     }
-    cursorX = colMin;
-    cursorY = rowMin;
 }
 
 void VGA::ensureCursorInRange() {
@@ -35,7 +35,7 @@ void VGA::ensureCursorInRange() {
 }
 
 template<>
-void VGA::print_impl(const char c, ...) {
+void VGA::print_impl(char c, ...) {
     switch (c) {
         case '\r':
             cursorX = colMin;
