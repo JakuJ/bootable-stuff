@@ -1,6 +1,6 @@
-#include "../include/PIC.hpp"
-#include "../include/port_io.hpp"
-#include "../include/KbController.hpp"
+#include "PIC.hpp"
+#include "port_io.hpp"
+#include "KbController.hpp"
 
 #define BLANK_IRQ(X) void irq##X##_handler(void) { PIC::sendEOI(X); }
 

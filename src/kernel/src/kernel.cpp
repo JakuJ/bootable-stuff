@@ -6,13 +6,13 @@
 #error "This kernel needs to be compiled with an x86-elf compiler!"
 #endif
 
-#include "../include/assertions.hpp"
-#include "../include/VGA.hpp"
-#include "../include/interrupts.hpp"
-#include "../include/PIC.hpp"
-#include "../include/IDT.hpp"
-#include "../include/KbController.hpp"
-#include "../../stdlib/function.hpp"
+#include "assertions.hpp"
+#include "VGA.hpp"
+#include "interrupts.hpp"
+#include "PIC.hpp"
+#include "IDT.hpp"
+#include "KbController.hpp"
+#include "function.hpp"
 
 // Kernel entry point
 extern "C" void kmain() {

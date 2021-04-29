@@ -1,7 +1,7 @@
 #pragma once
 
 #include "VGA.hpp"
-#include "../../stdlib/function.hpp"
+#include "function.hpp"
 
 using Handler = std::function<void, char, unsigned char> *;
 

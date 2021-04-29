@@ -1,5 +1,5 @@
-cmake-build-*/
 .idea/
 *.bin
 *.o
 .DS_Store
+build/
