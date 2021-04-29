@@ -15,6 +15,8 @@
 // Kernel entry point
 extern "C" void kmain() {
     // Initialize resources
+    PIC::remap(0x20, 0x28);
+    IDT::init();
     VGA vga;
 
     // Welcome user
@@ -23,23 +25,17 @@ extern "C" void kmain() {
 
     // Run diagnostics
     chackAssertions();
-    vga.print("Diagnostics passed\n\n");
 
-    // Test printf
-    vga.print("Printing test:\n");
+    vga.print("VGA printing test:\n");
     vga.print("Integral types: ", -12, '*', 42u, '-', 1l, '=', (short) -505, '\n');
     vga.print("FP types: ", 3.1415f, '*', -12.56, '=', -39.45724, '\n');
     vga.print("Booleans: ", true, ", ", false, "\n\n");
 
-    // Test interrupts
-    vga.print("Interrupts enabled: ", are_interrupts_enabled(), '\n');
-    vga.print("Enabling...\n");
-
-    PIC_remap(0x20, 0x28);
-    idt_init();
-
     vga.print("Interrupts enabled: ", are_interrupts_enabled(), '\n');
 
+    vga.print("Diagnostics passed\n\n");
+
+    // Do not exit from kernel, rather wait for interrupts
     while (true) {
         asm ("hlt");
     }
