@@ -37,33 +37,36 @@ extern "C" void kmain() {
 
     vga.print("Diagnostics passed\n\n");
 
-    // TODO: We are passing pointer to stack-allocated objects :)
+    // Keyboard event handler factory
+    auto mk_handler = [](VGA &v) {
+        return [&v](char symbol, unsigned char scancode) {
+            if (symbol != 0) {
+                v.print(symbol);
+            } else {
+                v.print('<', (unsigned) scancode, '>');
+            }
+        };
+    };
 
     // Register key pressed handler
     VGA kb_press_vga(40, VGA::TT_COLUMNS, 0, 12);
     kb_press_vga.print("Keyboard scancodes (pressed):\n");
 
-    auto press_callback = [&](unsigned char scancode) {
-        kb_press_vga.print(static_cast<unsigned>(scancode), ' ');
-    };
-
-    auto press_f = std::make_function(press_callback);
-    auto *pc = reinterpret_cast<std::function<void, unsigned char> *>(&press_f);
-    bool success = KbController::subscribePress(pc);
+    auto press_callback = std::make_function(mk_handler(kb_press_vga));
+    auto *pointer = reinterpret_cast<std::function<void, char, unsigned char> *>(&press_callback);
+    bool success = KbController::subscribePress(pointer);
     vga.print("Keyboard press handler registered: ", success, '\n');
 
     // Register key released handler
     VGA kb_release_vga(40, VGA::TT_COLUMNS, 13, VGA::TT_ROWS);
     kb_release_vga.print("Keyboard scancodes (released):\n");
 
-    auto release_callback = [&](unsigned char scancode) {
-        kb_release_vga.print(static_cast<unsigned>(scancode), ' ');
-    };
-
-    auto release_f = std::make_function(release_callback);
-    pc = reinterpret_cast<std::function<void, unsigned char> *>(&release_f);
-    success = KbController::subscribeRelease(pc);
+    auto release_callback = std::make_function(mk_handler(kb_release_vga));
+    pointer = reinterpret_cast<std::function<void, char, unsigned char> *>(&release_callback);
+    success = KbController::subscribeRelease(pointer);
     vga.print("Keyboard release handler registered: ", success, '\n');
+
+    // TODO: We are passing pointer to stack-allocated objects :)
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

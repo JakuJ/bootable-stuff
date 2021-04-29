@@ -3,15 +3,18 @@
 #include "VGA.hpp"
 #include "../../stdlib/function.hpp"
 
-// A handler is a pointer to a gen_function
-using Handler = std::function<void, unsigned char> *;
+using Handler = std::function<void, char, unsigned char> *;
 
 class KbController {
     static constexpr int MAX_HANDLERS = 16;
+    static constexpr int MAX_SCANCODES = 88;
 
     // TODO: Dynamic memory allocation
     static Handler pressHandlers[MAX_HANDLERS];
     static Handler releaseHandlers[MAX_HANDLERS];
+
+    static char translationTable[MAX_SCANCODES];
+    static char scanCodeToChar(unsigned char);
 
 public:
     static bool subscribePress(Handler h);
