@@ -1,6 +1,6 @@
 #include "../include/PIC.hpp"
 #include "../include/port_io.hpp"
-#include "../include/vga.hpp"
+#include "../include/VGA.hpp"
 
 #define BLANK_IRQ(X) void irq##X##_handler(void) { PIC::sendEOI(X); }
 
@@ -8,7 +8,7 @@
 #define KBD_SCANCODE_MASK   0x7f
 #define KBD_STATUS_MASK     0x80
 
-VGA vga;
+VGA vga(40, VGA::TT_COLUMNS, 0, VGA::TT_ROWS);
 
 extern "C" {
 

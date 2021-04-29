@@ -4,11 +4,14 @@
 #include "../../stdlib/type_traits.hpp"
 
 class VGA {
-    static constexpr unsigned TT_COLUMNS = 80;
-    static constexpr unsigned TT_ROWS = 25;
     static short *const FRAMEBUFFER;
 
     short color = 0x1f00;
+
+    const unsigned rowMin = 0;
+    const unsigned rowMax = TT_ROWS;
+    const unsigned colMin = 0;
+    const unsigned colMax = TT_COLUMNS;
 
     unsigned cursorX = 0;
     unsigned cursorY = 0;
@@ -16,6 +19,13 @@ class VGA {
     void ensureCursorInRange();
 
 public:
+    static constexpr unsigned TT_COLUMNS = 80;
+    static constexpr unsigned TT_ROWS = 25;
+
+    VGA();
+
+    VGA(unsigned minColumn, unsigned maxColumn, unsigned minRow, unsigned maxRow);
+
     void clearScreen();
 
     template<typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
@@ -41,7 +51,7 @@ public:
             // print fractional part
             print('.');
             T frac = num - dec;
-            print<long>(frac * 100000); // arbitrary
+            print<long>(frac * 100000); // TODO: actually respect precision
         }
     }
 

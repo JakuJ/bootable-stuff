@@ -7,7 +7,7 @@
 #endif
 
 #include "../include/assertions.hpp"
-#include "../include/vga.hpp"
+#include "../include/VGA.hpp"
 #include "../include/interrupts.hpp"
 #include "../include/PIC.hpp"
 #include "../include/IDT.hpp"
@@ -17,6 +17,7 @@ extern "C" void kmain() {
     // Initialize resources
     PIC::remap(0x20, 0x28);
     IDT::init();
+
     VGA vga;
 
     // Welcome user
