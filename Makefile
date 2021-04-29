@@ -7,10 +7,14 @@ kernel_object_files = $(patsubst src/kernel/src/%.cpp, build/kernel/%.o, $(kerne
 bootloader_object_file = build/bootloader.o
 image_file = build/image.bin
 
-CC = i386-elf-gcc
+CC = x86_64-elf-gcc
 LD = i386-elf-ld
+
 CFLAGS = -nostdlib -ffreestanding -mno-red-zone -fno-exceptions -fno-rtti
-CFLAGS += -O2 -m32 -std=c++17 -Wall -Wextra -I src/kernel/include -I src/stdlib
+CFLAGS += -O2 -m32 -std=c++17 -Wall -Wextra
+CFLAGS += -I src/kernel/include -I src/stdlib
+
+LDFLAGS = -n -T linking.ld
 
 all: $(image_file) count_sectors
 
@@ -26,7 +30,7 @@ $(kernel_object_files): build/kernel/%.o : src/kernel/src/%.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(image_file): $(bootloader_object_file) $(kernel_asm_object_files) $(kernel_object_files)
-	i386-elf-ld -o $@ -T linking.ld $^
+	$(LD) -o $@ $^ $(LDFLAGS)
 
 .PHONY: run clean count_sectors
 
