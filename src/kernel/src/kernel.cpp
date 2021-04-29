@@ -3,16 +3,16 @@
 #endif
 
 #if !defined(__i386__)
-#error "This kernel needs to be compiled with a x86-elf compiler!"
+#error "This kernel needs to be compiled with an x86-elf compiler!"
 #endif
 
-#include "../include/assertions.hpp"
-#include "../include/VGA.hpp"
-#include "../include/interrupts.hpp"
-#include "../include/PIC.hpp"
-#include "../include/IDT.hpp"
-#include "../include/KbController.hpp"
-#include "../../stdlib/function.hpp"
+#include "assertions.hpp"
+#include "VGA.hpp"
+#include "interrupts.hpp"
+#include "PIC.hpp"
+#include "IDT.hpp"
+#include "KbController.hpp"
+#include "function.hpp"
 
 // Kernel entry point
 extern "C" void kmain() {
@@ -66,7 +66,7 @@ extern "C" void kmain() {
     success = KbController::subscribeRelease(pointer);
     vga.print("Keyboard release handler registered: ", success, '\n');
 
-    // TODO: We are passing pointer to stack-allocated objects :)
+    // TODO: We are passing pointers to stack-allocated objects :)
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

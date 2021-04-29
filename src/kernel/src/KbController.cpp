@@ -1,4 +1,4 @@
-#include "../include/KbController.hpp"
+#include "KbController.hpp"
 
 Handler KbController::pressHandlers[] = {nullptr};
 Handler KbController::releaseHandlers[] = {nullptr};

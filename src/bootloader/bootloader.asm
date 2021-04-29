@@ -105,7 +105,7 @@ KERNEL_SEG equ gdt_kernel - gdt_start
 DATA_SEG equ gdt_data - gdt_start
 
 ; Include other functions
-%include "bootloader/io.asm"
+%include "src/bootloader/io.asm"
 
 ; Data
 title db "Bootloader v1.0", 0

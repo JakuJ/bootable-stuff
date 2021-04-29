@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utility.hpp"
-#include "../../stdlib/type_traits.hpp"
+#include "type_traits.hpp"
 
 class VGA {
     static short *const FRAMEBUFFER;
