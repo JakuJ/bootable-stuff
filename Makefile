@@ -7,7 +7,11 @@ kernel_object_files = $(patsubst src/kernel/src/%.cpp, build/kernel/%.o, $(kerne
 bootloader_object_file = build/bootloader.o
 image_file = build/image.bin
 
-CC = x86_64-elf-gcc
+# TODO: vga.print(1, 2, 3, 4, 5, 6, 7, 8, 9);
+# with the x86_64-elf-g++ compiler
+# produce interrupt 6 (invalid opcode)
+
+CC = i386-elf-g++
 LD = i386-elf-ld
 
 CFLAGS = -nostdlib -ffreestanding -mno-red-zone -fno-exceptions -fno-rtti
@@ -41,7 +45,7 @@ count_sectors: $(image_file)
 	@printf "\nSize of image.bin in sectors: "
 	@echo "scale=4; `wc -c $(image_file) | sed 's/[^0-9]//g'` / 512" | bc -lq
 	@printf "Currently loaded in bootloader: "
-	@grep -E "number of sectors to read" src/bootloader/bootloader.asm | sed 's/[^0-9]//g'
+	@cat src/bootloader/sectors.asm | sed 's/[^0-9]//g'
 
 clean:
 	rm -f *.bin *.o

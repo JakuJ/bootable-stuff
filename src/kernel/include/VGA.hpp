@@ -24,7 +24,7 @@ public:
 
     VGA();
 
-    VGA(unsigned minColumn, unsigned maxColumn, unsigned minRow, unsigned maxRow);
+    VGA(unsigned minColumn, unsigned maxColumn, unsigned minRow, unsigned maxRow, short color = 0x1f00);
 
     void clearScreen();
 

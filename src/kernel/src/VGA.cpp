@@ -4,8 +4,8 @@ short *const VGA::FRAMEBUFFER = reinterpret_cast<short *>(0xb8000);
 
 VGA::VGA() {}
 
-VGA::VGA(unsigned int minColumn, unsigned int maxColumn, unsigned int minRow, unsigned int maxRow)
-        : rowMin(minRow), rowMax(maxRow), colMin(minColumn), colMax(maxColumn) {
+VGA::VGA(unsigned int minColumn, unsigned int maxColumn, unsigned int minRow, unsigned int maxRow, short color)
+        : color(color), rowMin(minRow), rowMax(maxRow), colMin(minColumn), colMax(maxColumn) {
     cursorX = minColumn;
     cursorY = minRow;
 }

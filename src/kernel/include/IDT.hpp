@@ -8,6 +8,25 @@ namespace IDT {
         extern "C"
         {
         extern int load_idt(uint32_t *);
+        extern int isr0();
+        extern int isr1();
+        extern int isr2();
+        extern int isr3();
+        extern int isr4();
+        extern int isr5();
+        extern int isr6();
+        extern int isr7();
+        extern int isr8();
+        extern int isr9();
+        extern int isr10();
+        extern int isr11();
+        extern int isr12();
+        extern int isr13();
+        extern int isr14();
+        extern int isr15();
+        extern int isr16();
+        extern int isr17();
+        extern int isr18();
         extern int irq0();
         extern int irq1();
         extern int irq2();
@@ -49,7 +68,28 @@ namespace IDT {
     void init() {
         using namespace _internal;
 
-        // Register handlers
+        // Register error interrupt handlers
+        register_irq(isr0, 0);
+        register_irq(isr1, 1);
+        register_irq(isr2, 2);
+        register_irq(isr3, 3);
+        register_irq(isr4, 4);
+        register_irq(isr5, 5);
+        register_irq(isr6, 6);
+        register_irq(isr7, 7);
+        register_irq(isr8, 8);
+        register_irq(isr9, 9);
+        register_irq(isr10, 10);
+        register_irq(isr11, 11);
+        register_irq(isr12, 12);
+        register_irq(isr13, 13);
+        register_irq(isr14, 14);
+        register_irq(isr15, 15);
+        register_irq(isr16, 16);
+        register_irq(isr17, 17);
+        register_irq(isr18, 18);
+
+        // Register other interrupt handlers
         register_irq(irq0, 32);
         register_irq(irq1, 33);
         register_irq(irq2, 34);
