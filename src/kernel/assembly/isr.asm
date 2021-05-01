@@ -36,7 +36,7 @@ ISR_ERRCODE 13
 ISR_ERRCODE 14
 ISR_NOERRCODE 15
 ISR_NOERRCODE 16
-ISR_NOERRCODE 17
+ISR_NOERRCODE 17 ; Some sources say 17 and 21 DO HAVE error codes
 ISR_NOERRCODE 18
 
 isr_common_stub:
@@ -45,8 +45,7 @@ isr_common_stub:
   mov ax, ds               ; Lower 16-bits of eax = ds.
   push rax                 ; save the data segment descriptor
 
-  extern DATA_SEG
-  mov ax, DATA_SEG         ; load the kernel data segment descriptor
+  mov rax, 0x10         ; load the kernel data segment descriptor
   mov ds, ax
   mov es, ax
   mov fs, ax
@@ -62,6 +61,5 @@ isr_common_stub:
   mov gs, ax
 
   pop_all                     ; Pops edi,esi,ebp...
-  add esp, 8               ; Cleans up the pushed error code and pushed ISR number
-  sti
-  iret                     ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
+  add rsp, 8               ; Cleans up the pushed error code and pushed ISR number
+  iretq                     ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP

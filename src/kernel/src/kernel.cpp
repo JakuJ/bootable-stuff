@@ -9,7 +9,7 @@
 #include <VGA.hpp>
 #include <interrupts.hpp>
 #include <PIC.hpp>
-//#include <IDT.hpp>
+#include <IDT64.hpp>
 #include <KbController.hpp>
 #include <function.hpp>
 #include <string.hpp>
@@ -18,7 +18,7 @@
 extern "C" void kmain() {
     // Initialize resources
     PIC::remap(0x20, 0x28);
-//    IDT::init();
+    IDT::init();
     VGA vga;
 
     // Welcome user
@@ -30,7 +30,7 @@ extern "C" void kmain() {
 
     vga.printf("Integral types: %d * 0x%x - %d = %d\n", -12, 42u, 1l, -505);
 
-//    vga.printf("FP types: %f * %f = %f\n", 3.1415f, -12.56, -39.45724);
+    vga.printf("FP types: %f * %f = %f\n", 3.1415f, -12.56, -39.45724);
     vga.printf("Booleans: %b, %b\n\n", true, false);
 
     vga.printf("Interrupts enabled: %b\n", are_interrupts_enabled());
@@ -50,7 +50,7 @@ extern "C" void kmain() {
     kb_press_vga.printf("Keyboard scancodes (pressed):\n");
 
     auto press_callback = std::make_function(mk_handler(kb_press_vga));
-    auto *pointer = reinterpret_cast<std::function<void, char, unsigned char> *>(&press_callback);
+    auto *pointer = dynamic_cast<std::function<void, char, unsigned char> *>(&press_callback);
     bool success = KbController::subscribePress(pointer);
     vga.printf("Keyboard press handler registered: %b\n", success);
 

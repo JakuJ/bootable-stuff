@@ -1,7 +1,6 @@
 %ifidn __BITS__,64
 
 %macro push_all 0
-  ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
   push rdi
   push rsi
   push rbp
@@ -13,15 +12,14 @@
 %endmacro
 
 %macro pop_all 0
-  ; Pops edi,esi,ebp,esp,ebx,edx,ecx,eax
-  push rax
-  push rcx
-  push rdx
-  push rbx
-  push rsp
-  push rbp
-  push rsi
-  push rdi
+  pop rax
+  pop rcx
+  pop rdx
+  pop rbx
+  pop rsp
+  pop rbp
+  pop rsi
+  pop rdi
 %endmacro
 
 %else

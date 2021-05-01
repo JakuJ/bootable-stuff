@@ -5,8 +5,6 @@
 #include <interrupts.hpp>
 #include <macro_foreach.hpp>
 
-#define BLANK_IRQ(X) void irq##X##_handler(void) { PIC::sendEOI(X); }
-
 #define KBD_DATA_PORT       0x60
 #define KBD_SCANCODE_MASK   0x7f
 #define KBD_STATUS_MASK     0x80
@@ -19,14 +17,12 @@ bool are_interrupts_enabled() {
 
 extern "C" {
 
-void isr_handler(Registers regs) {
+void isr_handler(const ISR_Frame regs) {
     static VGA vga(0, VGA::TT_COLUMNS, 0, VGA::TT_ROWS, 0x0400);
-    PIC::sendEOI(regs.int_no);
-
     switch (regs.int_no) {
         case 6: // Invalid opcode
             vga.printf("Invalid opcode\n");
-            vga.printf("Instruction pointer: %d", regs.eip);
+            vga.printf("Instruction pointer: %d", regs.ip);
             break;
         case 13:
             vga.printf("General Protection Fault\n");
@@ -47,6 +43,13 @@ void isr_handler(Registers regs) {
     while (true);
 }
 
+void irq0_handler(void) {
+    static long long counter = 0;
+    static VGA clock_vga(0, VGA::TT_COLUMNS, 11, VGA::TT_ROWS);
+
+    PIC::sendEOI(0);
+    clock_vga.printf("Clock: %d\r", counter++);
+}
 
 void irq1_handler(void) {
     unsigned char scancode = inb(KBD_DATA_PORT);
@@ -62,7 +65,9 @@ void irq1_handler(void) {
     }
 }
 
-FOR_EACH(BLANK_IRQ, 0 , 2 , 3 , 4 , 5 , 6 , 7 , 8 )
+#define BLANK_IRQ(X) void irq##X##_handler(void) { PIC::sendEOI(X); }
+
+FOR_EACH(BLANK_IRQ, 2 , 3 , 4 , 5 , 6 , 7 , 8 )
 FOR_EACH(BLANK_IRQ, 9 , 10 , 11 , 12 , 13 , 14 , 15 )
 
 }

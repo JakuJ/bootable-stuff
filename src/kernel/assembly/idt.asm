@@ -8,10 +8,8 @@ section .text
   extern irq%[i]_handler
   global irq%[i]
   irq%[i]:
-      push_all
       call irq%[i]_handler
-      pop_all
-      iret
+      iretq
   %assign i i+1
 %endmacro
 
@@ -21,7 +19,7 @@ section .text
 
 global load_idt
 load_idt:
-	mov edx, [esp + 4]  ; load argument into edx
-	lidt [edx]          ; load IDT
-	sti                 ; enable interrupts
-	ret
+  extern idt_ptr
+  lidt [idt_ptr]      ; load IDT
+  sti                 ; enable interrupts
+  ret
