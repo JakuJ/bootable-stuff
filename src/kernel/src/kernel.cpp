@@ -62,7 +62,7 @@ extern "C" void kmain() {
     kb_release_vga.print("Keyboard scancodes (released):\n");
 
     auto release_callback = std::make_function(mk_handler(kb_release_vga));
-    pointer = reinterpret_cast<std::function<void, char, unsigned char> *>(&release_callback);
+    pointer = dynamic_cast<std::function<void, char, unsigned char> *>(&release_callback);
     success = KbController::subscribeRelease(pointer);
     vga.print("Keyboard release handler registered: ", success, '\n');
 

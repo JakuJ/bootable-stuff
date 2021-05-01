@@ -7,18 +7,14 @@ kernel_object_files = $(patsubst src/kernel/src/%.cpp, build/kernel/%.o, $(kerne
 bootloader_object_file = build/bootloader.o
 image_file = build/image.bin
 
-# TODO: vga.print(1, 2, 3, 4, 5, 6, 7, 8, 9);
-# with the x86_64-elf-g++ compiler
-# produce interrupt 6 (invalid opcode)
-
 CC = i386-elf-g++
 LD = i386-elf-ld
 
-CFLAGS = -nostdlib -ffreestanding -mno-red-zone -fno-exceptions -fno-rtti
+CFLAGS = -ffreestanding -fno-exceptions -fno-rtti
 CFLAGS += -O2 -m32 -std=c++17 -Wall -Wextra
 CFLAGS += -I src/kernel/include -I src/stdlib
 
-LDFLAGS = -n -T linking.ld
+LDFLAGS = -n -T linker.ld
 
 all: $(image_file) count_sectors
 

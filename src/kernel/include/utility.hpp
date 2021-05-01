@@ -1,11 +1,11 @@
 #pragma once
 
-typedef unsigned long size_t;
+// These headers are part of the compiler itself, and not the standard library
+#include <stddef.h> // size_t and NULL
+#include <stdint.h> // intXX_t and uintXX_t types
 
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long uint64_t;
+// Other accessible headers:
+// <float.h>, <iso646.h>, <limits.h>, <stdarg.h>
 
 constexpr auto strlen(const char *str) {
     const char *s = str;
