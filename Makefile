@@ -5,7 +5,7 @@ LD = i386-elf-ld
 
 # Flags
 CFLAGS = -m32 -ffreestanding -fno-exceptions -fno-rtti
-CFLAGS += -std=c++17 -Wall -Wextra
+CFLAGS += -std=c++17 -Wall -Wextra -pedantic
 CFLAGS += -O2 -fomit-frame-pointer
 CFLAGS += -I src/kernel/include -I src/stdlib
 

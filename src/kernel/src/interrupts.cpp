@@ -10,11 +10,10 @@
 #define KBD_SCANCODE_MASK   0x7f
 #define KBD_STATUS_MASK     0x80
 
-VGA vga(0, VGA::TT_COLUMNS, 0, VGA::TT_ROWS, 0x0400);
-
 extern "C" {
 
 void isr_handler(registers regs) {
+    static VGA vga(0, VGA::TT_COLUMNS, 0, VGA::TT_ROWS, 0x0400);
     PIC::sendEOI(regs.int_no);
 
     switch (regs.int_no) {
