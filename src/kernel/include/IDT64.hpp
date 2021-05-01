@@ -52,7 +52,7 @@ namespace IDT {
             uint16_t offset_2; // offset bits 16..31
             uint32_t offset_3; // offset bits 32..63
             uint32_t zero;     // reserved
-        } __attribute__((packed));
+        };
 
         static IDT_entry table[256];
 

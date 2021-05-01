@@ -5,7 +5,6 @@ section .text
 %macro ISR_NOERRCODE 1
   global isr%1
   isr%1:
-    cli
     push byte 0
     push byte %1
     jmp isr_common_stub
@@ -14,7 +13,6 @@ section .text
 %macro ISR_ERRCODE 1
   global isr%1
   isr%1:
-    cli
     push byte %1
     jmp isr_common_stub
 %endmacro
