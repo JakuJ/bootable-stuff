@@ -1,8 +1,8 @@
 #include "PIC.hpp"
-#include "port_io.hpp"
+#include "PortIO.hpp"
 #include "KbController.hpp"
 #include "VGA.hpp"
-#include "ISR.hpp"
+#include "interrupts.hpp"
 
 #define BLANK_IRQ(X) void irq##X##_handler(void) { PIC::sendEOI(X); }
 
@@ -10,9 +10,15 @@
 #define KBD_SCANCODE_MASK   0x7f
 #define KBD_STATUS_MASK     0x80
 
+bool are_interrupts_enabled() {
+    unsigned long flags;
+    asm volatile ("pushf\n\t pop %0" : "=g"(flags));
+    return flags & (1 << 9);
+}
+
 extern "C" {
 
-void isr_handler(registers regs) {
+void isr_handler(Registers regs) {
     static VGA vga(0, VGA::TT_COLUMNS, 0, VGA::TT_ROWS, 0x0400);
     PIC::sendEOI(regs.int_no);
 

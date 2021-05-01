@@ -6,7 +6,6 @@
 #error "This kernel needs to be compiled with an x86-elf compiler!"
 #endif
 
-#include "assertions.hpp"
 #include "VGA.hpp"
 #include "interrupts.hpp"
 #include "PIC.hpp"
@@ -26,16 +25,12 @@ extern "C" void kmain() {
     vga.print("Kernel loaded\n\n");
 
     // Run diagnostics
-    chackAssertions();
-
     vga.print("VGA printing test:\n");
     vga.print("Integral types: ", -12, '*', 42u, '-', 1l, '=', (short) -505, '\n');
     vga.print("FP types: ", 3.1415f, '*', -12.56, '=', -39.45724, '\n');
     vga.print("Booleans: ", true, ", ", false, "\n\n");
 
     vga.print("Interrupts enabled: ", are_interrupts_enabled(), '\n');
-
-    vga.print("Diagnostics passed\n\n");
 
     // Keyboard event handler factory
     auto mk_handler = [](VGA &v) {

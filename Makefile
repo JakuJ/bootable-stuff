@@ -18,6 +18,9 @@ kernel_asm_objects = $(patsubst src/kernel/assembly%.asm, build/kernel/%.o, $(ke
 kernel_cpp_sources = $(shell find src/kernel/src -name *.cpp)
 kernel_objects = $(patsubst src/kernel/src/%.cpp, build/kernel/%.o, $(kernel_cpp_sources))
 
+headers = $(shell find src/kernel/include -name *.hpp)
+headers += $(shell find src/stdlib -name *.hpp)
+
 bootloader_obj = build/boot/boot.o
 
 # C++ global constructors support
@@ -42,7 +45,7 @@ $(kernel_asm_objects): build/kernel/%.o : src/kernel/assembly/%.asm
 	mkdir -p $(dir $@) && \
 	$(AS) $(patsubst build/kernel/%.o, src/kernel/assembly/%.asm, $@) -o $@
 
-$(kernel_objects): build/kernel/%.o : src/kernel/src/%.cpp
+$(kernel_objects): build/kernel/%.o : src/kernel/src/%.cpp $(headers)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(image_file): $(obj_link_list)
