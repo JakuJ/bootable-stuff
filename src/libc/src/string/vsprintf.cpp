@@ -30,8 +30,8 @@ void vsprintf(char *buffer, char const *fmt, va_list arg) {
                     break;
                 }
                 case 'f': {
-                    double tmp = va_arg(arg, double);
-                    buffer = gcvt(tmp, 5, buffer); // TODO: Specifying precision
+//                    double tmp = va_arg(arg, double);
+//                    buffer = gcvt(tmp, 5, buffer); // TODO: Specifying precision
                     break;
                 }
                 case 'b': {

@@ -38,11 +38,11 @@ mov dh, 1
 int 10h
 
 ; Print the other message
-mov si, msg
-call putStr
+;mov si, msg
+;call putStr
 
 ; Wait for user input
-call readString
+;call readString
 
 ; ENTER 32-bit PROTECTED MODE
 
@@ -70,8 +70,27 @@ mov fs, ax
 mov gs, ax
 mov ss, ax
 
-; Transfer control to the kernel
-jmp KERNEL_SEG:kernel_copy_target
+; Enable long mode
+jmp KERNEL_SEG:long_mode
+
+bits 32
+
+; Enabling long mode
+long_mode:
+  call check_cpuid
+  call check_long_mode
+  call setup_paging
+
+  lgdt [GDT64.Pointer]                    ; Load the 64-bit global descriptor table.
+  jmp GDT64.Code:kernel_copy_target       ; Set the code segment and enter 64-bit long mode.
+
+%include "src/boot/include/long_mode.asm"
+
+bits 16
+
+; Include other functions
+%include "src/boot/include/io.asm"
+%include "src/boot/include/sectors.asm"
 
 ; Define GDT
 gdt_start:
@@ -105,13 +124,35 @@ global DATA_SEG
 KERNEL_SEG equ gdt_kernel - gdt_start
 DATA_SEG equ gdt_data - gdt_start
 
-; Include other functions
-%include "src/boot/include/io.asm"
-%include "src/boot/include/sectors.asm"
+GDT64:                           ; Global Descriptor Table (64-bit).
+  .Null: equ $ - GDT64         ; The null descriptor.
+  dw 0xFFFF                    ; Limit (low).
+  dw 0                         ; Base (low).
+  db 0                         ; Base (middle)
+  db 0                         ; Access.
+  db 1                         ; Granularity.
+  db 0                         ; Base (high).
+  .Code: equ $ - GDT64         ; The code descriptor.
+  dw 0                         ; Limit (low).
+  dw 0                         ; Base (low).
+  db 0                         ; Base (middle)
+  db 10011010b                 ; Access (exec/read).
+  db 10101111b                 ; Granularity, 64 bits flag, limit19:16.
+  db 0                         ; Base (high).
+  .Data: equ $ - GDT64         ; The data descriptor.
+  dw 0                         ; Limit (low).
+  dw 0                         ; Base (low).
+  db 0                         ; Base (middle)
+  db 10010010b                 ; Access (read/write).
+  db 00000000b                 ; Granularity.
+  db 0                         ; Base (high).
+  .Pointer:                    ; The GDT-pointer.
+  dw $ - GDT64 - 1             ; Limit.
+  dq GDT64                     ; Base.
 
-; Data
+; Strings
 title db "Bootloader v1.0", 0
-msg db "Press ENTER to load the kernel...", 0
+;msg db "Press ENTER to load the kernel...", 0
 
 ; Fill the rest of the bootloader binary with zeros
 times 510-($-$$) db 0
@@ -119,13 +160,20 @@ times 510-($-$$) db 0
 ; Write MBR signature
 dw 0xaa55
 
+bits 64
+
 ; Kernel code will be copied here
 kernel_copy_target:
-
-bits 32
+cli                           ; Clear the interrupt flag.
+mov ax, GDT64.Data            ; Set the A-register to the data descriptor.
+mov ds, ax                    ; Set the data segment to the A-register.
+mov es, ax                    ; Set the extra segment to the A-register.
+mov fs, ax                    ; Set the F-segment to the A-register.
+mov gs, ax                    ; Set the G-segment to the A-register.
+mov ss, ax                    ; Set the stack segment to the A-register.
 
 ; Update stack pointer
-mov esp, kernel_stack_top
+mov rsp, kernel_stack_top
 
 ; Execute global constructors
 extern _init

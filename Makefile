@@ -1,11 +1,12 @@
 # Tools
-AS = nasm -f elf32
-CC = i386-elf-g++
-LD = i386-elf-ld
+AS = nasm -f elf64
+CC = x86_64-elf-g++
+LD = x86_64-elf-ld
 
 # Flags
-CFLAGS = -m32 -ffreestanding -fno-exceptions -fno-rtti
+CFLAGS = -ffreestanding -fno-exceptions -fno-rtti
 CFLAGS += -std=c++17 -Wall -Wextra -pedantic
+CFLAGS += -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2
 CFLAGS += -O2 -fomit-frame-pointer
 CFLAGS += -I src/kernel/include -I src/libc/include
 

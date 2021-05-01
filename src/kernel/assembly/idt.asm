@@ -1,14 +1,16 @@
 section .text
 
+%include "src/kernel/assembly/include/push64.asm"
+
 %assign i 0
 
 %macro defhandler 0
   extern irq%[i]_handler
   global irq%[i]
   irq%[i]:
-      pusha
+      push_all
       call irq%[i]_handler
-      popa
+      pop_all
       iret
   %assign i i+1
 %endmacro

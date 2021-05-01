@@ -2,14 +2,14 @@
 #error "You are not using a cross-compiler, you will most certainly run into trouble!"
 #endif
 
-#if !defined(__i386__)
-#error "This kernel needs to be compiled with an x86-elf compiler!"
-#endif
+//#if !defined(__i386__)
+//#error "This kernel needs to be compiled with an x86-elf compiler!"
+//#endif
 
 #include <VGA.hpp>
 #include <interrupts.hpp>
 #include <PIC.hpp>
-#include <IDT.hpp>
+//#include <IDT.hpp>
 #include <KbController.hpp>
 #include <function.hpp>
 #include <string.hpp>
@@ -18,7 +18,7 @@
 extern "C" void kmain() {
     // Initialize resources
     PIC::remap(0x20, 0x28);
-    IDT::init();
+//    IDT::init();
     VGA vga;
 
     // Welcome user
@@ -30,11 +30,10 @@ extern "C" void kmain() {
 
     vga.printf("Integral types: %d * 0x%x - %d = %d\n", -12, 42u, 1l, -505);
 
-    vga.printf("FP types: %f * %f = %f\n", 3.1415f, -12.56, -39.45724);
+//    vga.printf("FP types: %f * %f = %f\n", 3.1415f, -12.56, -39.45724);
     vga.printf("Booleans: %b, %b\n\n", true, false);
 
     vga.printf("Interrupts enabled: %b\n", are_interrupts_enabled());
-
     // Keyboard event handler factory
     auto mk_handler = [](VGA &v) {
         return [&v](char symbol, unsigned char scancode) {
