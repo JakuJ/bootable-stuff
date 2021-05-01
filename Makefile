@@ -18,11 +18,11 @@ kernel_asm_objects = $(patsubst src/kernel/assembly%.asm, build/kernel/%.o, $(ke
 kernel_cpp_sources = $(shell find src/kernel/src -name *.cpp)
 kernel_objects = $(patsubst src/kernel/src/%.cpp, build/kernel/%.o, $(kernel_cpp_sources))
 
-bootloader_obj = build/bootloader.o
+bootloader_obj = build/boot/boot.o
 
 # C++ global constructors support
-crti_obj = build/crti.o
-crtn_obj = build/crtn.o
+crti_obj = build/boot/crti.o
+crtn_obj = build/boot/crtn.o
 crtbegin_obj = $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
 crtend_obj = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 
@@ -34,7 +34,7 @@ image_file = build/image.bin
 # Targets
 build: $(image_file) count_sectors
 
-$(bootloader_obj) $(crti_obj) $(crtn_obj): build/%.o : src/bootloader/%.asm
+$(bootloader_obj) $(crti_obj) $(crtn_obj): build/boot/%.o : src/boot/%.asm
 	mkdir -p $(dir $@) && \
 	$(AS) -o $@ $^
 
@@ -56,9 +56,8 @@ run: build
 count_sectors: $(image_file)
 	@printf "\nSize of image.bin in sectors: "
 	@echo "scale=4; `wc -c $(image_file) | sed 's/[^0-9]//g'` / 512" | bc -lq
-	@printf "Currently loaded in bootloader: "
-	@cat src/bootloader/include/sectors.asm | sed 's/[^0-9]//g'
+	@printf "Currently loaded by bootloader: "
+	@cat src/boot/include/sectors.asm | sed 's/[^0-9]//g'
 
 clean:
-	rm -f *.bin *.o
 	rm -rf build/*
