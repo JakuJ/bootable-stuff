@@ -1,8 +1,9 @@
-#include "PIC.hpp"
-#include "PortIO.hpp"
-#include "KbController.hpp"
-#include "VGA.hpp"
-#include "interrupts.hpp"
+#include <PIC.hpp>
+#include <PortIO.hpp>
+#include <KbController.hpp>
+#include <VGA.hpp>
+#include <interrupts.hpp>
+#include <macro_foreach.hpp>
 
 #define BLANK_IRQ(X) void irq##X##_handler(void) { PIC::sendEOI(X); }
 
@@ -24,23 +25,23 @@ void isr_handler(Registers regs) {
 
     switch (regs.int_no) {
         case 6: // Invalid opcode
-            vga.print("Invalid opcode\n");
-            vga.print("Instruction pointer: ", regs.eip);
+            vga.printf("Invalid opcode\n");
+            vga.printf("Instruction pointer: %d", regs.eip);
             break;
         case 13:
-            vga.print("General Protection Fault\n");
+            vga.printf("General Protection Fault\n");
             if (regs.err_code != 0) {
                 if (regs.err_code & 1) {
-                    vga.print("Exception of external origin");
+                    vga.printf("Exception of external origin");
                 } else {
                     const char *sources[] = {"GDT", "IDT", "LDT", "IDT"};
-                    vga.print("Source: ", sources[(regs.err_code >> 1) & 0x3], '\n');
-                    vga.print("Selector index: ", (regs.err_code >> 3) & 0x1ffff);
+                    vga.printf("Source: %s\n", sources[(regs.err_code >> 1) & 0x3]);
+                    vga.printf("Selector index: %d", (regs.err_code >> 3) & 0x1ffff);
                 }
             }
             break;
         default:
-            vga.print("Unhandled interrupt: ", regs.int_no, '\n');
+            vga.printf("Unhandled interrupt: %d", regs.int_no);
             break;
     }
     while (true);

@@ -16,7 +16,7 @@ void VGA::clearScreen() {
     cursorY = rowMin;
     for (auto x = colMin; x < colMax; x++) {
         for (auto y = rowMin; y < rowMax; y++) {
-            print(' ');
+            putChar(' ');
         }
     }
 }
@@ -35,8 +35,7 @@ void VGA::ensureCursorInRange() {
     }
 }
 
-template<>
-void VGA::print_impl(char c, ...) {
+void VGA::putChar(char c) {
     switch (c) {
         case '\r':
             cursorX = colMin;
@@ -55,18 +54,17 @@ void VGA::print_impl(char c, ...) {
     ensureCursorInRange();
 }
 
-template<>
-void VGA::print_impl(const char *str, ...) {
-    for (size_t i = 0; i < strlen(str); i++) {
-        print(str[i]);
-    }
-}
+void VGA::printf(const char *fmt, ...) {
+    va_list arg;
+    va_start(arg, fmt);
 
-template<>
-void VGA::print_impl(bool b, ...) {
-    if (b) {
-        print("true");
-    } else {
-        print("false");
+    char buffer[512];
+    vsprintf(buffer, fmt, arg);
+
+    char *ptr = buffer;
+    while (*ptr) {
+        putChar(*ptr++);
     }
+
+    va_end(arg);
 }

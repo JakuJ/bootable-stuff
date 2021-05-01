@@ -6,12 +6,13 @@
 #error "This kernel needs to be compiled with an x86-elf compiler!"
 #endif
 
-#include "VGA.hpp"
-#include "interrupts.hpp"
-#include "PIC.hpp"
-#include "IDT.hpp"
-#include "KbController.hpp"
-#include "function.hpp"
+#include <VGA.hpp>
+#include <interrupts.hpp>
+#include <PIC.hpp>
+#include <IDT.hpp>
+#include <KbController.hpp>
+#include <function.hpp>
+#include <string.hpp>
 
 // Kernel entry point
 extern "C" void kmain() {
@@ -22,44 +23,46 @@ extern "C" void kmain() {
 
     // Welcome user
     vga.clearScreen();
-    vga.print("Kernel loaded\n\n");
+    vga.printf("Kernel loaded\n\n");
 
     // Run diagnostics
-    vga.print("VGA printing test:\n");
-    vga.print("Integral types: ", -12, '*', 42u, '-', 1l, '=', (short) -505, '\n');
-    vga.print("FP types: ", 3.1415f, '*', -12.56, '=', -39.45724, '\n');
-    vga.print("Booleans: ", true, ", ", false, "\n\n");
+    vga.printf("VGA printing test:\n");
 
-    vga.print("Interrupts enabled: ", are_interrupts_enabled(), '\n');
+    vga.printf("Integral types: %d * 0x%x - %d = %d\n", -12, 42u, 1l, -505);
+
+    vga.printf("FP types: %f * %f = %f\n", 3.1415f, -12.56, -39.45724);
+    vga.printf("Booleans: %b, %b\n\n", true, false);
+
+    vga.printf("Interrupts enabled: %b\n", are_interrupts_enabled());
 
     // Keyboard event handler factory
     auto mk_handler = [](VGA &v) {
         return [&v](char symbol, unsigned char scancode) {
             if (symbol != 0) {
-                v.print(symbol);
+                v.putChar(symbol);
             } else {
-                v.print('<', (unsigned) scancode, '>');
+                v.printf("<%d>", scancode);
             }
         };
     };
 
     // Register key pressed handler
     VGA kb_press_vga(40, VGA::TT_COLUMNS, 0, 12);
-    kb_press_vga.print("Keyboard scancodes (pressed):\n");
+    kb_press_vga.printf("Keyboard scancodes (pressed):\n");
 
     auto press_callback = std::make_function(mk_handler(kb_press_vga));
     auto *pointer = reinterpret_cast<std::function<void, char, unsigned char> *>(&press_callback);
     bool success = KbController::subscribePress(pointer);
-    vga.print("Keyboard press handler registered: ", success, '\n');
+    vga.printf("Keyboard press handler registered: %b\n", success);
 
     // Register key released handler
     VGA kb_release_vga(40, VGA::TT_COLUMNS, 13, VGA::TT_ROWS);
-    kb_release_vga.print("Keyboard scancodes (released):\n");
+    kb_release_vga.printf("Keyboard scancodes (released):\n");
 
     auto release_callback = std::make_function(mk_handler(kb_release_vga));
     pointer = dynamic_cast<std::function<void, char, unsigned char> *>(&release_callback);
     success = KbController::subscribeRelease(pointer);
-    vga.print("Keyboard release handler registered: ", success, '\n');
+    vga.printf("Keyboard release handler registered: %b\n", success);
 
     // TODO: We are passing pointers to stack-allocated objects :)
 
