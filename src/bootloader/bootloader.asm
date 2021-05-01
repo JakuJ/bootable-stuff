@@ -106,8 +106,8 @@ KERNEL_SEG equ gdt_kernel - gdt_start
 DATA_SEG equ gdt_data - gdt_start
 
 ; Include other functions
-%include "src/bootloader/io.asm"
-%include "src/bootloader/sectors.asm"
+%include "src/bootloader/include/io.asm"
+%include "src/bootloader/include/sectors.asm"
 
 ; Data
 title db "Bootloader v1.0", 0
@@ -127,9 +127,17 @@ bits 32
 ; Update stack pointer
 mov esp, kernel_stack_top
 
+; Execute global constructors
+extern _init
+call _init
+
 ; Execute kernel code
 extern kmain
 call kmain
+
+; Execute cleanup routines
+extern _fini
+call _fini
 
 ; Halt
 cli
