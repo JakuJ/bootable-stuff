@@ -1,6 +1,5 @@
 #pragma once
 
-#include "utility.hpp"
 #include "type_traits.hpp"
 
 class VGA {

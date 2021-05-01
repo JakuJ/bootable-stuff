@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 struct Registers {
     uint32_t ds; // Data segment selector
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;

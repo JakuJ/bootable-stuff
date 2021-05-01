@@ -1,4 +1,5 @@
-#include "VGA.hpp"
+#include <VGA.hpp>
+#include <string.hpp>
 
 short *const VGA::FRAMEBUFFER = reinterpret_cast<short *>(0xb8000);
 
