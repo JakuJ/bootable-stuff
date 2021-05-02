@@ -59,7 +59,7 @@ $(libc_objects): build/libc/%.o : src/libc/src/%.cpp $(libc_headers)
 $(image_file): $(obj_link_list)
 	$(LD) -o $@ $(obj_link_list) $(LDFLAGS)
 
-.PHONY: qemu64 clean count_sectors
+.PHONY: qemu64 hvf clean count_sectors
 
 qemu64: build
 	qemu-system-x86_64 \

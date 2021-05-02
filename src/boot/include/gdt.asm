@@ -34,7 +34,7 @@ GDT64:                         ; Global Descriptor Table (64-bit)
   db 10011010b                 ; Access (exec/read)
   db 10101111b                 ; Granularity, 64 bits flag, limit19:16
   db 0                         ; Base (high)
-  .Data: equ $ - GDT64         ; The data descriptor.
+  .Data: equ $ - GDT64         ; The data descriptor
   dw 0                         ; Limit (low)
   dw 0                         ; Base (low)
   db 0                         ; Base (middle)

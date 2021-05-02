@@ -1,15 +1,7 @@
-#if defined(__linux__)
-#error "You are not using a cross-compiler, you will most certainly run into trouble!"
-#endif
-
-//#if !defined(__i386__)
-//#error "This kernel needs to be compiled with an x86-elf compiler!"
-//#endif
-
 #include <VGA.hpp>
 #include <interrupts.hpp>
 #include <PIC.hpp>
-#include <IDT64.hpp>
+#include <IDT.hpp>
 #include <KbController.hpp>
 #include <function.hpp>
 #include <string.hpp>
@@ -83,14 +75,6 @@ extern "C" void kmain() {
 
     // TODO: We are passing pointers to stack-allocated objects :)
 
-    // TODO: Page fault handling
-    // Provoke a page fault over 2MB
-    // uint64_t addr = 0x1ffff0;
-    // while (true) {
-    //     uint32_t *ptr = reinterpret_cast<uint32_t *>(addr);
-    //     vga.printf("Byte at addr 0x%x (%d): 0x%x\r", addr, addr, *ptr);
-    //     addr++;
-    // }
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

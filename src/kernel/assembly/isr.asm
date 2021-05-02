@@ -1,11 +1,11 @@
 section .text
 
-%include "src/kernel/assembly/include/push64.asm"
+%include "src/kernel/assembly/include/push_all.asm"
 
 %macro ISR_NOERRCODE 1
   global isr%1
   isr%1:
-    push byte 0
+    push byte 0 ; Dummy error code for stack consistency
     push byte %1
     jmp isr_common_stub
 %endmacro
@@ -60,5 +60,5 @@ isr_common_stub:
   mov gs, ax
 
   pop_all             ; pop registers
-  add rsp, 8          ; pop the pushed error code and pushed ISR number
+  add rsp, 2          ; pop the pushed error code and pushed ISR number
   iretq               ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP

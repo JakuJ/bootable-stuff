@@ -1,15 +1,15 @@
-section .code
+section .text
 
 global query_cpu:
 query_cpu:
   push rbx
   push rdx
 
-  mov eax, edi  ; page
+  mov eax, edi  ; 1st argument: CPUID page
   mov ecx, 0
   cpuid
 
-  cmp esi, 0    ; register
+  cmp esi, 0    ; 2nd argument: register (0 - EAX ... 3 - EDX)
   je .read_eax
   cmp esi, 1
   je .read_ebx
@@ -31,7 +31,7 @@ query_cpu:
   mov r8, rcx
 
   .process:
-  pop rcx     ; bits
+  pop rcx     ; 3rd argument: bit index
   mov eax, 1
   rol eax, cl
   xchg rax, r8

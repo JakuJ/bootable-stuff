@@ -2,7 +2,7 @@
 
 **Work in progress.**
 
-This repository contains a custom bootloader and an x86_64 kernel written, both written from scratch.
+This repository contains a custom bootloader and an x86_64 kernel, both written from scratch.
 
 ![current state](docs/current.gif)
 
@@ -13,8 +13,6 @@ Make sure you have the required dependencies:
 - make
 - nasm
 - QEMU (qemu-system-x86_64)
-- i386-elf-g++
-- i386-elf-ld
 - x86_64-elf-g++
 - x86_64-elf-ld
 
@@ -32,8 +30,7 @@ to build the image and boot it in QEMU.
 - Bootloader
     - [x] Protected mode
     - [x] Long mode
-    - [x] SSE, AVX
-    - [ ] Compiling for both 32-bit and 64-bit
+    - [x] Enabling SSE, AVX*
 - VGA controller
     - [x] Printing text to the screen
 - Interrupts

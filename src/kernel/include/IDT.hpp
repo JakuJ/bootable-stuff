@@ -1,13 +1,12 @@
 #pragma once
 
 #define KERNEL_CODE_SEGMENT_OFFSET  0x08
-#define INTERRUPT_GATE              0x8e
 
 namespace IDT {
     namespace _internal {
         extern "C"
         {
-        extern int load_idt(uint32_t *);
+        extern int load_idt();
         extern int isr0();
         extern int isr1();
         extern int isr2();
@@ -46,22 +45,44 @@ namespace IDT {
         }
 
         struct IDT_entry {
-            unsigned short int offset_lowerbits;
-            unsigned short int selector;
-            unsigned char zero;
-            unsigned char type_attr;
-            unsigned short int offset_higherbits;
+            uint16_t offset_1; // offset bits 0..15
+            uint16_t selector; // a code segment selector in GDT or LDT
+            uint8_t ist;       // bits 0..2 holds Interrupt Stack Table offset, rest of bits zero.
+            uint8_t type_attr; // type and attributes
+            uint16_t offset_2; // offset bits 16..31
+            uint32_t offset_3; // offset bits 32..63
+            uint32_t zero;     // reserved
         };
 
         static IDT_entry table[256];
 
-        void register_irq(int(*irq)(), int index) {
-            uint32_t irq_address = (uint32_t) irq;
-            table[index].offset_lowerbits = irq_address & 0xffff;
-            table[index].selector = KERNEL_CODE_SEGMENT_OFFSET;
+        struct IDT_pointer {
+            uint16_t limit;
+            uint64_t base;
+        } __attribute__((packed));
+
+        void register_with(int(*irq)(), int index, uint8_t flags) {
+            intptr_t irq_address = (intptr_t) irq;
+
             table[index].zero = 0;
-            table[index].type_attr = INTERRUPT_GATE;
-            table[index].offset_higherbits = (irq_address & 0xffff0000) >> 16;
+            table[index].ist = 0;
+            table[index].offset_1 = irq_address & 0xffff;
+            table[index].offset_2 = (irq_address >> 16) & 0xffff;
+            table[index].offset_3 = (irq_address >> 32) & 0xffffffff;
+            table[index].selector = KERNEL_CODE_SEGMENT_OFFSET;
+            table[index].type_attr = flags;
+        }
+
+        void register_isr(int(*irq)(), int index) {
+            register_with(irq, index, 0x8f);
+        }
+
+        void register_irq(int(*irq)(), int index) {
+            register_with(irq, index, 0x8e);
+        }
+
+        extern "C" {
+        IDT_pointer idt_ptr;
         }
     }
 
@@ -69,25 +90,25 @@ namespace IDT {
         using namespace _internal;
 
         // Register error interrupt handlers
-        register_irq(isr0, 0);
-        register_irq(isr1, 1);
-        register_irq(isr2, 2);
-        register_irq(isr3, 3);
-        register_irq(isr4, 4);
-        register_irq(isr5, 5);
-        register_irq(isr6, 6);
-        register_irq(isr7, 7);
-        register_irq(isr8, 8);
-        register_irq(isr9, 9);
-        register_irq(isr10, 10);
-        register_irq(isr11, 11);
-        register_irq(isr12, 12);
-        register_irq(isr13, 13);
-        register_irq(isr14, 14);
-        register_irq(isr15, 15);
-        register_irq(isr16, 16);
-        register_irq(isr17, 17);
-        register_irq(isr18, 18);
+        register_isr(isr0, 0);
+        register_isr(isr1, 1);
+        register_isr(isr2, 2);
+        register_isr(isr3, 3);
+        register_isr(isr4, 4);
+        register_isr(isr5, 5);
+        register_isr(isr6, 6);
+        register_isr(isr7, 7);
+        register_isr(isr8, 8);
+        register_isr(isr9, 9);
+        register_isr(isr10, 10);
+        register_isr(isr11, 11);
+        register_isr(isr12, 12);
+        register_isr(isr13, 13);
+        register_isr(isr14, 14);
+        register_isr(isr15, 15);
+        register_isr(isr16, 16);
+        register_isr(isr17, 17);
+        register_isr(isr18, 18);
 
         // Register other interrupt handlers
         register_irq(irq0, 32);
@@ -108,13 +129,11 @@ namespace IDT {
         register_irq(irq15, 47);
 
         // Fill the IDT descriptor
-        uint32_t idt_address = (uint32_t) table;
-
-        uint32_t idt_ptr[2];
-        idt_ptr[0] = (sizeof(IDT_entry) * 256) + ((idt_address & 0xffff) << 16);
-        idt_ptr[1] = idt_address >> 16;
+        uint64_t idt_address = (uint64_t) table;
+        idt_ptr.limit = (sizeof(IDT_entry) * 256) - 1;
+        idt_ptr.base = idt_address;
 
         // Load the IDT
-        load_idt(idt_ptr);
+        load_idt();
     }
 }

@@ -28,7 +28,7 @@ in al, 0x92
 or al, 2
 out 0x92, al
 
-; Load GDT
+; Load the 32-bit GDT
 lgdt [GDT32.Pointer]
 
 ; Set PE (Protection Enable) bit in CR0 (Control Register 0)
@@ -50,7 +50,6 @@ jmp GDT32.Code:protected_mode
 bits 32
 
 protected_mode:
-  ; Enable long mode
   call check_cpuid
   call check_long_mode
   call setup_paging
@@ -105,7 +104,7 @@ hlt
 section .bss
 align 4
 
-; Allocate 16KB of stack space in 0-filled section
+; Allocate 16KB of stack space
 kernel_stack_bottom: equ $
 resb 16384
 kernel_stack_top:

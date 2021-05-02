@@ -1,7 +1,5 @@
 section .text
 
-%include "src/kernel/assembly/include/push64.asm"
-
 %assign i 0
 
 %macro defhandler 0
@@ -20,6 +18,6 @@ section .text
 global load_idt
 load_idt:
   extern idt_ptr
-  lidt [idt_ptr]      ; load IDT
-  sti                 ; enable interrupts
+  lidt [idt_ptr]
+  sti
   ret
