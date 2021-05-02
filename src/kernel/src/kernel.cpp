@@ -5,9 +5,7 @@
 #include <KbController.hpp>
 #include <function.hpp>
 #include <string.hpp>
-
-extern "C" int query_cpu(int page, int reg_no, int bit);
-extern "C" void enable_avx(void);
+#include <Diagnostics.hpp>
 
 // Kernel entry point
 extern "C" void kmain() {
@@ -20,28 +18,11 @@ extern "C" void kmain() {
     vga.clearScreen();
     vga.printf("Kernel loaded\n\n");
 
+    // Print section info
+    print_sections(vga);
+
     // Print information on SSE extensions
-    vga.printf("MMX: %b\n", query_cpu(1, 3, 23));
-    vga.printf("SSE: %b\n", query_cpu(1, 3, 25));
-    vga.printf("SSE2: %b\n", query_cpu(1, 3, 26));
-    vga.printf("SSE3: %b\n", query_cpu(1, 2, 0));
-    vga.printf("SSSE3: %b\n", query_cpu(1, 2, 9));
-    vga.printf("SSE4.1: %b\n", query_cpu(1, 2, 19));
-    vga.printf("SSE4.2: %b\n", query_cpu(1, 2, 20));
-    vga.printf("SSE4a: %b\n", query_cpu(0x80000001, 2, 6));
-
-    int xsave = query_cpu(1, 2, 26);
-    vga.printf("XSAVE: %b\n", xsave);
-
-    if (xsave) {
-        int avx = query_cpu(1, 2, 28);
-        vga.printf("AVX: %b\n", avx);
-        vga.printf("AVX2: %b\n", query_cpu(7, 1, 5));
-        vga.printf("AVX512: %b\n", query_cpu(7, 1, 16));
-        if (avx) {
-            enable_avx();
-        }
-    }
+    print_sse(vga);
 
     vga.printf("Interrupts enabled: %b\n", are_interrupts_enabled());
     // Keyboard event handler factory
@@ -74,7 +55,6 @@ extern "C" void kmain() {
     vga.printf("Keyboard release handler: %b\n", success);
 
     // TODO: We are passing pointers to stack-allocated objects :)
-
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {
