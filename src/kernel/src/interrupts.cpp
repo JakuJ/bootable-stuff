@@ -43,7 +43,7 @@ const char *exceptions[NUM_EXCEPTIONS] = {
 extern "C" {
 
 void isr_handler(const ISR_Frame regs) {
-    static VGA vga(0, VGA::TT_COLUMNS, 0, VGA::TT_ROWS, 0xb000);
+    static VGA vga(0, VGA::TT_COLUMNS, 0, VGA::TT_ROWS, 0x0f00);
 
     // Print exception type
     if (regs.int_no < NUM_EXCEPTIONS) {

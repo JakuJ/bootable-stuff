@@ -4,9 +4,8 @@ CC = x86_64-elf-g++
 LD = x86_64-elf-ld
 
 # Flags
-CFLAGS = -ffreestanding -fno-exceptions -fno-rtti
+CFLAGS = -ffreestanding -fno-exceptions -fno-rtti -mno-mmx
 CFLAGS += -std=c++17 -Wall -Wextra -pedantic
-CFLAGS += -mno-red-zone -mno-mmx -mno-sse -mno-sse2
 CFLAGS += -O2 -fomit-frame-pointer
 CFLAGS += -I src/kernel/include -I src/libc/include
 

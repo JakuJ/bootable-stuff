@@ -15,7 +15,7 @@ char *gcvt(double value, int ndigits, char *buf) {
     *buf++ = '.';
     double frac = value - dec;
 
-//    buf = itoa(frac * pow(10.0, ndigits), buf);
+    buf = itoa(frac * pow(10.0, ndigits), buf);
 
     *buf = '\0';
     return buf;
