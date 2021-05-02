@@ -65,6 +65,20 @@ void isr_handler(const ISR_Frame regs) {
                 }
             }
             break;
+        case 14: {
+            vga.printf(regs.err_code & 1 ? "Page-protection violation\n" : "Non-present page\n");
+            vga.printf(regs.err_code & 2 ? "Write access\n" : "Read access\n");
+            if (regs.err_code & 4) {
+                vga.printf("Caused while CPL = 3\n");
+            }
+            if (regs.err_code & 8) {
+                vga.printf("One or more page directory entries contain reserved bits which are set to 1\n");
+            }
+            if (regs.err_code & 16) {
+                vga.printf("Caused by an instruction fetch\n");
+            }
+            break;
+        }
     }
 
     // Register dump

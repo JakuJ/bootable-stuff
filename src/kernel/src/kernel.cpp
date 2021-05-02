@@ -15,6 +15,7 @@
 #include <string.hpp>
 
 extern "C" int query_cpu(int page, int reg_no, int bit);
+extern "C" void enable_avx(void);
 
 // Kernel entry point
 extern "C" void kmain() {
@@ -34,9 +35,19 @@ extern "C" void kmain() {
     vga.printf("SSE3: %b\n", query_cpu(1, 2, 0));
     vga.printf("SSE4.1: %b\n", query_cpu(1, 2, 19));
     vga.printf("SSE4.2: %b\n", query_cpu(1, 2, 20));
-    vga.printf("AVX: %b\n", query_cpu(1, 2, 28));
-    vga.printf("AVX2: %b\n", query_cpu(7, 1, 5));
-    vga.printf("AVX512: %b\n", query_cpu(7, 1, 16));
+
+    int xsave = query_cpu(1, 2, 26);
+    vga.printf("XSAVE: %b\n", xsave);
+
+    if (xsave) {
+        int avx = query_cpu(1, 2, 28);
+        vga.printf("AVX: %b\n", avx);
+        vga.printf("AVX2: %b\n", query_cpu(7, 1, 5));
+        vga.printf("AVX512: %b\n", query_cpu(7, 1, 16));
+        if (avx) {
+            enable_avx();
+        }
+    }
 
     vga.printf("Interrupts enabled: %b\n", are_interrupts_enabled());
     // Keyboard event handler factory

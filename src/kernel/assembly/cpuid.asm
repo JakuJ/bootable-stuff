@@ -39,3 +39,19 @@ query_cpu:
 
   pop rbx
   ret
+
+global enable_avx
+enable_avx:         ; CPU must support XSAVE
+  push rax
+  push rcx
+  push rdx
+
+  xor rcx, rcx
+  xgetbv            ; load the XCR0 register
+  or eax, 7         ; set the AVX, SSE, x87 bits
+  xsetbv            ; save back to XCR0
+
+  pop rdx
+  pop rcx
+  pop rax
+  ret
