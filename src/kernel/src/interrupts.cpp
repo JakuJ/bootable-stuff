@@ -77,7 +77,7 @@ void isr_handler(const ISR_Frame regs) {
 
 void irq0_handler(void) {
     static long long counter = 0;
-    static VGA clock_vga(0, VGA::TT_COLUMNS, 11, VGA::TT_ROWS);
+    static VGA clock_vga(0, VGA::TT_COLUMNS, VGA::TT_ROWS - 2, VGA::TT_ROWS);
 
     PIC::sendEOI(0);
     clock_vga.printf("Clock: %d\r", counter++);

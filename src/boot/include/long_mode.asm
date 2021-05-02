@@ -85,9 +85,9 @@ setup_paging:
 
 enable_sse:
   ; Check if SSE is available
-  mov eax, 0x1
+  mov eax, 1
   cpuid
-  test edx, 1<<25
+  test edx, 1 << 25
   jz no_sse
 
   ; Now enable SSE and the like
@@ -97,7 +97,8 @@ enable_sse:
   mov cr0, eax
 
   mov eax, cr4
-  or ax, 3 << 9		  ; set CR4.OSFXSR and CR4.OSXMMEXCPT at the same time
+  or eax, 3 << 9		  ; set CR4.OSFXSR and CR4.OSXMMEXCPT at the same time
+  or eax, 1 << 18     ; set CR4.OSXSAVE flag
   mov cr4, eax
   ret
 

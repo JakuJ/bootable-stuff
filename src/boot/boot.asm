@@ -5,13 +5,6 @@ bits 16
 global boot
 boot:
 
-; Print welcome message
-mov si, welcome
-call putStr
-
-; Wait for user input
-call waitForKeyPress
-
 ; Reset disk system
 mov ah, 0
 int 0x13 ; dl = drive number (already set by the BIOS)
@@ -52,11 +45,12 @@ mov gs, ax
 mov ss, ax
 
 ; Enter 32-bit protected mode
-jmp GDT32.Code:enable_long_mode
+jmp GDT32.Code:protected_mode
 
 bits 32
 
-enable_long_mode:
+protected_mode:
+  ; Enable long mode
   call check_cpuid
   call check_long_mode
   call setup_paging
@@ -67,17 +61,9 @@ enable_long_mode:
 
 %include "src/boot/include/long_mode.asm"
 
-bits 16
-
-; Include other functions
-%include "src/boot/include/io.asm"
+; Bootloader data section
 %include "src/boot/include/sectors.asm"
-
-; Include Global Descriptor Tables for 32-bit and 64-bit modes
 %include "src/boot/include/gdt.asm"
-
-; Welcome message data
-welcome db 10d, "Bootloader v1.0", 13d, 10d, "Press any key...", 0
 
 ; Fill the rest of the bootloader binary with zeros
 times 510 - ($ - $$) db 0

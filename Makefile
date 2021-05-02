@@ -4,9 +4,10 @@ CC = x86_64-elf-g++
 LD = x86_64-elf-ld
 
 # Flags
-CFLAGS = -ffreestanding -fno-exceptions -fno-rtti -mno-mmx
-CFLAGS += -std=c++17 -Wall -Wextra -pedantic
-CFLAGS += -O2 -fomit-frame-pointer
+CFLAGS = -ffreestanding -fno-exceptions -fno-rtti
+CFLAGS += -std=c++17 -Wall -Wextra -pedantic -masm=intel
+CFLAGS += -O2
+CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/libc/include
 
 LDFLAGS = -n -T linker.ld
