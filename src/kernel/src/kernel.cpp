@@ -33,8 +33,10 @@ extern "C" void kmain() {
     vga.printf("SSE: %b\n", query_cpu(1, 3, 25));
     vga.printf("SSE2: %b\n", query_cpu(1, 3, 26));
     vga.printf("SSE3: %b\n", query_cpu(1, 2, 0));
+    vga.printf("SSSE3: %b\n", query_cpu(1, 2, 9));
     vga.printf("SSE4.1: %b\n", query_cpu(1, 2, 19));
     vga.printf("SSE4.2: %b\n", query_cpu(1, 2, 20));
+    vga.printf("SSE4a: %b\n", query_cpu(0x80000001, 2, 6));
 
     int xsave = query_cpu(1, 2, 26);
     vga.printf("XSAVE: %b\n", xsave);

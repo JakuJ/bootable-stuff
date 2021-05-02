@@ -6,7 +6,7 @@ LD = x86_64-elf-ld
 # Flags
 CFLAGS = -ffreestanding -fno-exceptions -fno-rtti
 CFLAGS += -std=c++17 -Wall -Wextra -pedantic -masm=intel
-CFLAGS += -O2
+CFLAGS += -O3
 CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/libc/include
 
@@ -59,10 +59,12 @@ $(libc_objects): build/libc/%.o : src/libc/src/%.cpp $(libc_headers)
 $(image_file): $(obj_link_list)
 	$(LD) -o $@ $(obj_link_list) $(LDFLAGS)
 
-.PHONY: run clean count_sectors
+.PHONY: qemu64 clean count_sectors
 
-run: build
-	qemu-system-x86_64 -drive format=raw,file=$(image_file)
+qemu64: build
+	qemu-system-x86_64 \
+	-cpu qemu64,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4a,+sse4.1,+sse4.2,+xsave,+avx,+avx2 \
+	-drive format=raw,file=$(image_file)
 
 count_sectors: $(image_file)
 	@printf "\nSize of image.bin in sectors: "

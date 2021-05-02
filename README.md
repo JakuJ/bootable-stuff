@@ -2,33 +2,35 @@
 
 **Work in progress.**
 
-This repository contains an x86 bootloader and kernel written from scratch.
-
-The main goal is to learn x86 assembly and OS/kernel programming.
+This repository contains a custom bootloader and an x86_64 kernel written, both written from scratch.
 
 ![current state](docs/current.gif)
 
-## Running
+# Running
 
-Install these dependencies:
+Make sure you have the required dependencies:
 
 - nasm
-- qemu-system-x86_64
-- i386-elf-gcc
+- QEMU (qemu-system-x86_64)
+- i386-elf-g++
+- i386-elf-ld
+- x86_64-elf-g++
+- x86_64-elf-ld
 
 Then
 
 ```
-make run
+make qemu64
 ```
 
 to build the image and boot it in QEMU.
 
-## Features
+# Features
 
 - Bootloader
     - [x] Protected mode
-    - [ ] Long mode?
+    - [x] Long mode
+    - [x] SSE, AVX (see: notes)
     - [ ] Compiling for both 32-bit and 64-bit?
 - VGA controller
     - [x] Printing text to the screen
@@ -42,3 +44,14 @@ to build the image and boot it in QEMU.
     - [x] Simple `std::function`-like wrappers
     - [ ] Dynamic memory allocation (`malloc`?, `new` operators)
     - [ ] VGA-independent `printf`
+
+# Caveats
+
+### AVX support
+
+Provided that [XSAVE](https://wiki.osdev.org/SSE#XSAVE) is supported by the CPU, we can enable `AVX` within the kernel.
+To do this, we enable the `avx` CPU feature in QEMU.
+
+However, QEMU's [TCG](https://wiki.qemu.org/Features/TCG) cannot translate AVX instructions, and so they cannot be
+emulated. This means that we cannot actually use AVX to vectorize kernel code. Attempting to compile the kernel
+with `-mavx` will result in a **General Protection Fault**.
