@@ -44,7 +44,8 @@ isr_common_stub:
   mov ax, ds
   push rax            ; save the data segment descriptor
 
-  mov rax, 0x10       ; load the kernel data segment descriptor
+  extern GDT64_Data
+  mov rax, GDT64_Data ; load the kernel data segment descriptor
   mov ds, ax
   mov es, ax
   mov fs, ax

@@ -1,33 +1,19 @@
 #include <Diagnostics.hpp>
 
-extern "C" {
-extern int _BOOT_START_;
-extern int _BOOT_END_;
-
-extern int _TEXT_START_;
-extern int _TEXT_END_;
-
-extern int _RODATA_START_;
-extern int _RODATA_END_;
-
-extern int _DATA_START_;
-extern int _DATA_END_;
-
-extern int _BSS_START_;
-extern int _BSS_END_;
-
 extern "C" int query_cpu(int page, int reg_no, int bit);
 extern "C" void enable_avx(void);
-}
 
 void print_sections(VGA &vga) {
+
 #define PRINT_SECTION(X) \
+    extern int _##X##_START_, _##X##_END_; \
     vga.printf(#X ": %d bytes, %d - %d (0x%x - 0x%x)\n", \
     (long)(&_##X##_END_) - (long)(&_##X##_START_), \
     &_##X##_START_, &_##X##_END_, &_##X##_START_, &_##X##_END_);
 
     vga.printf("Sections:\n");
     PRINT_SECTION(BOOT)
+    PRINT_SECTION(GDT)
     PRINT_SECTION(TEXT)
     PRINT_SECTION(RODATA)
     PRINT_SECTION(DATA)

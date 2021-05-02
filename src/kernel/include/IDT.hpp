@@ -1,11 +1,10 @@
 #pragma once
 
-#define KERNEL_CODE_SEGMENT_OFFSET  0x08
-
 namespace IDT {
     namespace _internal {
         extern "C"
         {
+        extern uintptr_t GDT64_Code;
         extern int load_idt();
         extern int isr0();
         extern int isr1();
@@ -62,14 +61,14 @@ namespace IDT {
         } __attribute__((packed));
 
         void register_with(int(*irq)(), int index, uint8_t flags) {
-            intptr_t irq_address = (intptr_t) irq;
+            auto irq_address = reinterpret_cast<intptr_t>(irq);
 
             table[index].zero = 0;
             table[index].ist = 0;
             table[index].offset_1 = irq_address & 0xffff;
             table[index].offset_2 = (irq_address >> 16) & 0xffff;
             table[index].offset_3 = (irq_address >> 32) & 0xffffffff;
-            table[index].selector = KERNEL_CODE_SEGMENT_OFFSET;
+            table[index].selector = reinterpret_cast<uintptr_t>(&GDT64_Code);
             table[index].type_attr = flags;
         }
 

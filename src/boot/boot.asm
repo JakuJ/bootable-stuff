@@ -1,6 +1,13 @@
 section .boot
 bits 16
 
+extern GDT32_Code
+extern GDT32_Data
+extern GDT32_Pointer
+extern GDT64_Code
+extern GDT64_Data
+extern GDT64_Pointer
+
 ; Define global symbol for the linker
 global boot
 boot:
@@ -29,7 +36,7 @@ or al, 2
 out 0x92, al
 
 ; Load the 32-bit GDT
-lgdt [GDT32.Pointer]
+lgdt [GDT32_Pointer]
 
 ; Set PE (Protection Enable) bit in CR0 (Control Register 0)
 mov eax, cr0
@@ -37,7 +44,7 @@ or al, 1
 mov cr0, eax
 
 ; Set the remaining segments to point at the data segment
-mov ax, GDT32.Data
+mov ax, GDT32_Data
 mov ds, ax
 mov es, ax
 mov fs, ax
@@ -45,7 +52,7 @@ mov gs, ax
 mov ss, ax
 
 ; Enter 32-bit protected mode
-jmp GDT32.Code:protected_mode
+jmp GDT32_Code:protected_mode
 
 bits 32
 
@@ -55,14 +62,13 @@ protected_mode:
   call setup_paging
   call enable_sse
 
-  lgdt [GDT64.Pointer]                    ; Load the 64-bit GDT
-  jmp GDT64.Code:kernel_copy_target       ; Enter 64-bit long mode.
+  lgdt [GDT64_Pointer]                    ; Load the 64-bit GDT
+  jmp GDT64_Code:kernel_copy_target       ; Enter 64-bit long mode.
 
 %include "src/boot/include/long_mode.asm"
 
 ; Bootloader data section
 %include "src/boot/include/sectors.asm"
-%include "src/boot/include/gdt.asm"
 
 ; Fill the rest of the bootloader binary with zeros
 times 510 - ($ - $$) db 0
@@ -75,7 +81,7 @@ kernel_copy_target:
 bits 64
 
 ; Set segment registers to point at the data segment
-mov ax, GDT64.Data
+mov ax, GDT64_Data
 mov ds, ax
 mov es, ax
 mov fs, ax
