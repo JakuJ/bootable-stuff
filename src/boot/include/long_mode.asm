@@ -42,27 +42,44 @@ check_long_mode:
   jz no_long_mode              ; They aren't, there is no long mode.
   ret
 
+%define page_table 0x1000
+
 setup_paging:
-  mov edi, 0x1000              ; Set the destination index to 0x1000.
+  ; Clear the tables
+  mov edi, page_table          ; Set the destination index to page_table.
   mov cr3, edi                 ; Set control register 3 to the destination index.
   xor eax, eax                 ; Nullify the A-register.
   mov ecx, 4096                ; Set the C-register to 4096.
   rep stosd                    ; Clear the memory.
   mov edi, cr3                 ; Set the destination index to control register 3.
 
-  mov DWORD [edi], 0x2003      ; Set the uint32_t at the destination index to 0x2003.
-  add edi, 0x1000              ; Add 0x1000 to the destination index.
-  mov DWORD [edi], 0x3003      ; Set the uint32_t at the destination index to 0x3003.
-  add edi, 0x1000              ; Add 0x1000 to the destination index.
-  mov DWORD [edi], 0x4003      ; Set the uint32_t at the destination index to 0x4003.
+  ; Set up tables
+  ; PML4T[0] -> PDPT.
+  ; PDPT[0] -> PDT.
+  ; PDT[0] -> PT.
+  ; PT -> 0x00000000 - 0x00200000.
+  mov eax, page_table
+  or eax, 3
+
+  add eax, 0x1000
+  mov DWORD [edi], eax         ; Set the uint32_t at the destination index to 0x2003.
   add edi, 0x1000              ; Add 0x1000 to the destination index.
 
+  add eax, 0x1000
+  mov DWORD [edi], eax         ; Set the uint32_t at the destination index to 0x3003.
+  add edi, 0x1000              ; Add 0x1000 to the destination index.
+
+  add eax, 0x1000
+  mov DWORD [edi], eax         ; Set the uint32_t at the destination index to 0x4003.
+  add edi, 0x1000              ; Add 0x1000 to the destination index.
+
+  ; Identity map the first 2MB
   mov ebx, 0x00000003          ; Set the B-register to 0x00000003.
-  mov ecx, 512                 ; Set the C-register to 512.
+  mov ecx, 512                 ; Set the C-register to 512 (number of entries in PT).
 
   .set_entry:
     mov DWORD [edi], ebx       ; Set the uint32_t at the destination index to the B-register.
-    add ebx, 0x1000            ; Add 0x1000 to the B-register.
+    add ebx, page_table        ; Add page_table to the B-register.
     add edi, 8                 ; Add eight to the destination index.
     loop .set_entry            ; Set the next entry.
 
@@ -98,7 +115,7 @@ enable_sse:
 
   mov eax, cr4
   or eax, 3 << 9		  ; set CR4.OSFXSR and CR4.OSXMMEXCPT at the same time
-  or eax, 1 << 18     ; set CR4.OSXSAVE flag
+  or eax, 1 << 18     ; set CR4.OSXSAVE flag to enable XSAVE (in turn used to enable AVX)
   mov cr4, eax
   ret
 

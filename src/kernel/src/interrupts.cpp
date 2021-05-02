@@ -66,11 +66,15 @@ void isr_handler(const ISR_Frame regs) {
             }
             break;
         case 14: {
+            uint64_t address;
+
+            // Faulting address is stored in CR2
+            asm volatile ("mov %0, cr2" : "=r"(address));
+            vga.printf("Address: 0x%x (%d)\n", address, address);
+
             vga.printf(regs.err_code & 1 ? "Page-protection violation\n" : "Non-present page\n");
             vga.printf(regs.err_code & 2 ? "Write access\n" : "Read access\n");
-            if (regs.err_code & 4) {
-                vga.printf("Caused while CPL = 3\n");
-            }
+            vga.printf("Caused by process in ring %d\n", (regs.err_code & 4) ? 3 : 0);
             if (regs.err_code & 8) {
                 vga.printf("One or more page directory entries contain reserved bits which are set to 1\n");
             }

@@ -83,6 +83,15 @@ extern "C" void kmain() {
 
     // TODO: We are passing pointers to stack-allocated objects :)
 
+    // TODO: Page fault handling
+    // Provoke a page fault over 2MB
+    // uint64_t addr = 0x1ffff0;
+    // while (true) {
+    //     uint32_t *ptr = reinterpret_cast<uint32_t *>(addr);
+    //     vga.printf("Byte at addr 0x%x (%d): 0x%x\r", addr, addr, *ptr);
+    //     addr++;
+    // }
+
     // Do not exit from kernel, rather wait for interrupts
     while (true) {
         asm ("hlt");
