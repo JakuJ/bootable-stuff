@@ -1,12 +1,13 @@
 # Tools
-AS = nasm -f elf32
-CC = i386-elf-g++
-LD = i386-elf-ld
+AS = nasm -f elf64
+CC = x86_64-elf-g++
+LD = x86_64-elf-ld
 
 # Flags
-CFLAGS = -m32 -ffreestanding -fno-exceptions -fno-rtti
-CFLAGS += -std=c++17 -Wall -Wextra -pedantic
-CFLAGS += -O2 -fomit-frame-pointer
+CFLAGS = -ffreestanding -fno-exceptions -fno-rtti
+CFLAGS += -std=c++17 -Wall -Wextra -pedantic -masm=intel
+CFLAGS += -O3
+CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/libc/include
 
 LDFLAGS = -n -T linker.ld
@@ -58,10 +59,17 @@ $(libc_objects): build/libc/%.o : src/libc/src/%.cpp $(libc_headers)
 $(image_file): $(obj_link_list)
 	$(LD) -o $@ $(obj_link_list) $(LDFLAGS)
 
-.PHONY: run clean count_sectors
+.PHONY: qemu64 hvf clean count_sectors
 
-run: build
-	qemu-system-x86_64 -no-reboot -drive format=raw,file=$(image_file)
+qemu64: build
+	qemu-system-x86_64 \
+	-cpu qemu64,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4a,+sse4.1,+sse4.2,+xsave,+avx,+avx2 \
+	-drive format=raw,file=$(image_file)
+
+hvf: build
+	qemu-system-x86_64 \
+	-M accel=hvf -cpu host,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+xsave,+avx,+avx2 \
+	-drive format=raw,file=$(image_file)
 
 count_sectors: $(image_file)
 	@printf "\nSize of image.bin in sectors: "
