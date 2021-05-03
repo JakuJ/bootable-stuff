@@ -1,1 +1,1 @@
-sectors_to_read: db 40d
+sectors_to_read: db 80d

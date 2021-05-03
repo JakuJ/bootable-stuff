@@ -1,5 +1,5 @@
 #include <VGA.hpp>
-#include <interrupts.hpp>
+#include <Interrupts.hpp>
 #include <PIC.hpp>
 #include <IDT.hpp>
 #include <KbController.hpp>

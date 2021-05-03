@@ -2,7 +2,7 @@
 #include <PortIO.hpp>
 #include <KbController.hpp>
 #include <VGA.hpp>
-#include <interrupts.hpp>
+#include <Interrupts.hpp>
 #include <macro_foreach.hpp>
 
 #define KBD_DATA_PORT       0x60

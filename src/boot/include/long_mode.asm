@@ -42,46 +42,40 @@ check_long_mode:
   jz no_long_mode              ; They aren't, there is no long mode.
   ret
 
-%define page_table 0x1000
-
+extern PML4T
+extern PDPT
+extern PDT
+extern PT
 setup_paging:
-  ; Clear the tables
-  mov edi, page_table          ; Set the destination index to page_table.
-  mov cr3, edi                 ; Set control register 3 to the destination index.
-  xor eax, eax                 ; Nullify the A-register.
-  mov ecx, 4096                ; Set the C-register to 4096.
-  rep stosd                    ; Clear the memory.
-  mov edi, cr3                 ; Set the destination index to control register 3.
+  ; Save page hierarchy root (PML4T) to CR3
+  mov edi, PML4T
+  mov cr3, edi
 
   ; Set up tables
-  ; PML4T[0] -> PDPT.
-  ; PDPT[0] -> PDT.
-  ; PDT[0] -> PT.
-  ; PT -> 0x00000000 - 0x00200000.
-  mov eax, page_table
+  ; PML4T[0] -> PDPT
+  ; PDPT[0] -> PDT
+  ; PDT[0] -> PT
+  mov eax, PDPT
   or eax, 3
+  mov DWORD [PML4T], eax
 
-  add eax, 0x1000
-  mov DWORD [edi], eax         ; Set the uint32_t at the destination index to 0x2003.
-  add edi, 0x1000              ; Add 0x1000 to the destination index.
+  mov eax, PDT
+  or eax, 3
+  mov DWORD [PDPT], eax
 
-  add eax, 0x1000
-  mov DWORD [edi], eax         ; Set the uint32_t at the destination index to 0x3003.
-  add edi, 0x1000              ; Add 0x1000 to the destination index.
-
-  add eax, 0x1000
-  mov DWORD [edi], eax         ; Set the uint32_t at the destination index to 0x4003.
-  add edi, 0x1000              ; Add 0x1000 to the destination index.
+  mov eax, PT
+  or eax, 3
+  mov DWORD [PDT], eax
 
   ; Identity map the first 2MB
-  mov ebx, 0x00000003          ; Set the B-register to 0x00000003.
-  mov ecx, 512                 ; Set the C-register to 512 (number of entries in PT).
-
+  mov ebx, 0x00000003          ; Physical address | flags
+  mov ecx, 512                 ; Iteration counter
+  mov edi, PT                  ; Pointer to the current PT cell
   .set_entry:
-    mov DWORD [edi], ebx       ; Set the uint32_t at the destination index to the B-register.
-    add ebx, page_table        ; Add page_table to the B-register.
-    add edi, 8                 ; Add eight to the destination index.
-    loop .set_entry            ; Set the next entry.
+    mov DWORD [edi], ebx
+    add ebx, 0x1000            ; Move to the next page
+    add edi, 8                 ; Move to the next PT cell
+    loop .set_entry
 
   ; Enable PAE (Physical Address Extension)
   mov eax, cr4                 ; Set the A-register to control register 4.
