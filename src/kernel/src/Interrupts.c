@@ -126,6 +126,7 @@ extern void irq1_handler(void) {
 #define BLANK_IRQ(X) extern void irq##X##_handler(void) { PIC_send_EOI(X); }
 
 FOR_EACH(BLANK_IRQ,
-2 , 3 , 4 , 5 , 6 , 7 , 8 )
+         2, 3, 4, 5, 6, 7, 8)
+
 FOR_EACH(BLANK_IRQ,
-9 , 10 , 11 , 12 , 13 , 14 , 15 )
+         9, 10, 11, 12, 13, 14, 15)

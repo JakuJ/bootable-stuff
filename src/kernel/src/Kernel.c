@@ -3,7 +3,6 @@
 #include <PIC.h>
 #include <IDT.h>
 #include <KbController.h>
-#include <string.h>
 #include <Diagnostics.h>
 
 // Kernel entry point
@@ -12,9 +11,9 @@ extern void kmain() {
     PIC_remap(0x20, 0x28);
     IDT_init();
     VGA vga = {
-        .rowMax = TT_ROWS,
-        .colMax = TT_COLUMNS,
-        .color = WHITE_ON_BLUE,
+            .rowMax = TT_ROWS,
+            .colMax = TT_COLUMNS,
+            .color = WHITE_ON_BLUE,
     };
 
     // Welcome user

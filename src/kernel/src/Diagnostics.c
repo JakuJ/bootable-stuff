@@ -1,6 +1,6 @@
 #include <Diagnostics.h>
 
-extern int query_cpu(int page, int reg_no, int bit);
+extern int query_cpu(unsigned int page, int reg_no, int bit);
 
 extern void enable_avx(void);
 

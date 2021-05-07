@@ -1,9 +1,5 @@
 #pragma once
 
-extern uintptr_t GDT64_Code;
-
-extern int load_idt();
-
 extern int isr0();
 
 extern int isr1();
@@ -74,6 +70,10 @@ extern int irq14();
 
 extern int irq15();
 
+extern uintptr_t GDT64_Code;
+
+extern int load_idt();
+
 typedef struct {
     uint16_t offset_1; // offset bits 0..15
     uint16_t selector; // a code segment selector in GDT or LDT
@@ -100,7 +100,7 @@ void register_with(int(*irq)(), int index, uint8_t flags) {
             .offset_1 = irq_address & 0xffff,
             .offset_2 = (irq_address >> 16) & 0xfff,
             .offset_3 = (irq_address >> 32) & 0xffffffff,
-            .selector = (uintptr_t)(&GDT64_Code),
+            .selector = (uintptr_t) (&GDT64_Code),
             .type_attr = flags,
     };
 }

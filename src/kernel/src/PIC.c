@@ -1,5 +1,5 @@
-#include "PIC.h"
-#include "PortIO.h"
+#include <PIC.h>
+#include <PortIO.h>
 
 #define PIC1            0x20        /* IO base address for master PIC */
 #define PIC2            0xA0        /* IO base address for slave PIC */
@@ -24,8 +24,8 @@
 #define ICW4_BUF_MASTER 0x0C        /* Buffered mode/master */
 #define ICW4_SFNM       0x10        /* Special fully nested (not) */
 
-void PIC_send_EOI(unsigned char irq) {
-    if (irq >= 8) {
+void PIC_send_EOI(unsigned irq_no) {
+    if (irq_no >= 8) {
         outb(PIC2_COMMAND, PIC_EOI);
     }
     outb(PIC1_COMMAND, PIC_EOI);
