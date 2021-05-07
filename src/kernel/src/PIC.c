@@ -1,5 +1,5 @@
-#include "PIC.hpp"
-#include "PortIO.hpp"
+#include "PIC.h"
+#include "PortIO.h"
 
 #define PIC1            0x20        /* IO base address for master PIC */
 #define PIC2            0xA0        /* IO base address for slave PIC */
@@ -24,7 +24,7 @@
 #define ICW4_BUF_MASTER 0x0C        /* Buffered mode/master */
 #define ICW4_SFNM       0x10        /* Special fully nested (not) */
 
-void PIC::sendEOI(unsigned char irq) {
+void PIC_send_EOI(unsigned char irq) {
     if (irq >= 8) {
         outb(PIC2_COMMAND, PIC_EOI);
     }
@@ -35,7 +35,7 @@ void PIC::sendEOI(unsigned char irq) {
 /*  offset1 - vector offset for master PIC
               vectors on the master become offset1..offset1+7
     offset2 - same for slave PIC: offset2..offset2+7 */
-void PIC::remap(int offset1, int offset2) {
+void PIC_remap(int offset1, int offset2) {
     unsigned char a1, a2;
 
     // save masks

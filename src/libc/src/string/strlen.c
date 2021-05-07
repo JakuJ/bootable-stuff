@@ -1,9 +1,9 @@
-#include <string.hpp>
+#include <string.h>
 
 size_t strlen(const char *str) {
     const char *s = str;
     while (*s) {
         s++;
     }
-    return static_cast<size_t>(s - str);
+    return (size_t)(s - str);
 }

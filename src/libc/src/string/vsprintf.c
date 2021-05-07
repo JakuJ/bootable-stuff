@@ -1,4 +1,4 @@
-#include <string.hpp>
+#include <string.h>
 
 void vsprintf(char *buffer, char const *fmt, va_list arg) {
     char ch;
@@ -11,7 +11,7 @@ void vsprintf(char *buffer, char const *fmt, va_list arg) {
                     break;
                 }
                 case 'c': {
-                    *buffer++ = static_cast<char>(va_arg(arg, int));
+                    *buffer++ = (char)va_arg(arg, int);
                     break;
                 }
                 case 's': {

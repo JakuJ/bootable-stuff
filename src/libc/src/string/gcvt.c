@@ -1,5 +1,5 @@
-#include <string.hpp>
-#include <math.hpp>
+#include <string.h>
+#include <math.h>
 
 char *gcvt(double value, int ndigits, char *buf) {
     if (value < 0) {
@@ -8,14 +8,14 @@ char *gcvt(double value, int ndigits, char *buf) {
     }
 
     // print decimal part
-    int dec = static_cast<int>(value);
+    int dec = (int)value;
     buf = itoa(dec, buf, 10);
 
     // print fractional part
     *buf++ = '.';
     double frac = value - dec;
 
-    buf = itoa(frac * pow<double>(10.0, ndigits), buf);
+    buf = itoa(frac * pow(10.0, ndigits), buf, 10);
 
     *buf = '\0';
     return buf;

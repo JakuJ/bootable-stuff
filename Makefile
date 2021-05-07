@@ -1,12 +1,11 @@
 # Tools
 AS = nasm -f elf64
-CC = x86_64-elf-g++
+CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
 
 # Flags
-CFLAGS = -ffreestanding -fno-exceptions -fno-rtti
-CFLAGS += -std=c++17 -Wall -Wextra -pedantic -masm=intel
-CFLAGS += -O3
+CFLAGS = -std=gnu11 -masm=intel -ffreestanding
+CFLAGS += -O3 -Wall -Wextra -pedantic
 CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/libc/include
 
@@ -16,35 +15,26 @@ LDFLAGS = -n -T linker.ld
 kernel_asm_sources = $(shell find src/kernel/assembly -maxdepth 1 -name *.asm)
 kernel_asm_objects = $(patsubst src/kernel/assembly%.asm, build/kernel/%.o, $(kernel_asm_sources))
 
-kernel_cpp_sources = $(shell find src/kernel/src -name *.cpp)
-kernel_objects = $(patsubst src/kernel/src/%.cpp, build/kernel/%.o, $(kernel_cpp_sources))
+kernel_cpp_sources = $(shell find src/kernel/src -name *.c)
+kernel_objects = $(patsubst src/kernel/src/%.c, build/kernel/%.o, $(kernel_cpp_sources))
 
-libc_cpp_sources = $(shell find src/libc/src -name *.cpp)
-libc_objects = $(patsubst src/libc/src/%.cpp, build/libc/%.o, $(libc_cpp_sources))
+libc_cpp_sources = $(shell find src/libc/src -name *.c)
+libc_objects = $(patsubst src/libc/src/%.c, build/libc/%.o, $(libc_cpp_sources))
 
-kernel_headers = $(shell find src/kernel/include -name *.hpp)
-libc_headers = $(shell find src/libc/include -name *.hpp)
+kernel_headers = $(shell find src/kernel/include -name *.h)
+libc_headers = $(shell find src/libc/include -name *.h)
 
 bootloader_sources = $(shell find src/boot -maxdepth 1 -name *.asm)
 bootloader_objs = $(patsubst src/boot/%.asm, build/boot/%.o, $(bootloader_sources))
 
-# C++ global constructors support
-crti_obj = build/boot/crti.o
-crtn_obj = build/boot/crtn.o
-crtbegin_obj = $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
-crtend_obj = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
-
-bootloader_objs := $(filter-out $(crti_obj) $(crtn_obj),$(bootloader_objs))
-
-all_objects = $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(libc_objects)
-obj_link_list = $(crti_obj) $(crtbegin_obj) $(all_objects) $(crtend_obj) $(crtn_obj)
+obj_link_list = $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(libc_objects)
 
 image_file = build/image.bin
 
 # Targets
 build: $(image_file) count_sectors
 
-$(bootloader_objs) $(crti_obj) $(crtn_obj): build/boot/%.o : src/boot/%.asm
+$(bootloader_objs): build/boot/%.o : src/boot/%.asm
 	mkdir -p $(dir $@) && \
 	$(AS) -o $@ $^
 
@@ -52,10 +42,10 @@ $(kernel_asm_objects): build/kernel/%.o : src/kernel/assembly/%.asm
 	mkdir -p $(dir $@) && \
 	$(AS) $(patsubst build/kernel/%.o, src/kernel/assembly/%.asm, $@) -o $@
 
-$(kernel_objects): build/kernel/%.o : src/kernel/src/%.cpp $(kernel_headers)
+$(kernel_objects): build/kernel/%.o : src/kernel/src/%.c $(kernel_headers)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(libc_objects): build/libc/%.o : src/libc/src/%.cpp $(libc_headers)
+$(libc_objects): build/libc/%.o : src/libc/src/%.c $(libc_headers)
 	mkdir -p $(dir $@) && \
 	$(CC) -c -o $@ $< $(CFLAGS)
 
