@@ -43,6 +43,7 @@ $(kernel_asm_objects): build/kernel/%.o : src/kernel/assembly/%.asm
 	$(AS) $(patsubst build/kernel/%.o, src/kernel/assembly/%.asm, $@) -o $@
 
 $(kernel_objects): build/kernel/%.o : src/kernel/src/%.c $(kernel_headers)
+	mkdir -p $(dir $@) && \
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(libc_objects): build/libc/%.o : src/libc/src/%.c $(libc_headers)
