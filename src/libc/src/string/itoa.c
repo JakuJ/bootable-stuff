@@ -1,23 +1,28 @@
 #include <string.h>
 
-char *itoa_rec(int num, char *buffer, int base) {
+char *itoa_rec(long num, char *buffer, int base) {
     if (num > 0) {
         buffer = itoa_rec(num / base, buffer, base);
-        int digit = num % base;
+        char digit = num % base;
         *buffer++ = digit <= 9 ? ('0' + digit) : ('a' + (digit - 10));
     }
     return buffer;
 }
 
-char *itoa(int num, char *buffer, int base) {
-    if (num == 0) {
-        *buffer++ = '0';
-    } else if (num < 0) {
+char *itoa(long num, char *buffer, int base) {
+    if (num < 0) {
         *buffer++ = '-';
         num *= -1;
     }
 
-    if (num > 0) {
+    if (base == 16) {
+        *buffer++ = '0';
+        *buffer++ = 'x';
+    }
+
+    if (num == 0) {
+        *buffer++ = '0';
+    } else {
         buffer = itoa_rec(num, buffer, base);
     }
 

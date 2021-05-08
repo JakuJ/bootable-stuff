@@ -1,7 +1,17 @@
 #include <VGA.h>
 #include <string.h>
+#include <macros.h>
 
-short *FRAMEBUFFER = (short *) 0xb8000;
+#define FRAMEBUFFER ((short *) 0xb8000)
+
+VGA VGA_init(VGA vga) {
+    DEFAULT(vga.rowMax, TT_ROWS);
+    DEFAULT(vga.colMax, TT_COLUMNS);
+    DEFAULT(vga.cursorX, vga.colMin);
+    DEFAULT(vga.cursorY, vga.rowMin);
+    DEFAULT(vga.color, WHITE_ON_BLUE);
+    return vga;
+}
 
 void clearScreen(VGA *vga) {
     vga->cursorX = vga->colMin;

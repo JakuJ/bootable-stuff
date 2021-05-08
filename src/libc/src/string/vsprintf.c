@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdbool.h>
 
 void vsprintf(char *buffer, char const *fmt, va_list arg) {
     char ch;
@@ -19,24 +20,42 @@ void vsprintf(char *buffer, char const *fmt, va_list arg) {
                     buffer = strcpy(buffer, str);
                     break;
                 }
+                case 'l': {
+                    switch (ch = *fmt++) {
+                        case 'u': {
+                            buffer = itoa(va_arg(arg, unsigned long), buffer, 10);
+                            break;
+                        }
+                        case 'd': {
+                            buffer = itoa(va_arg(arg, long), buffer, 10);
+                            break;
+                        }
+                        case 'x': {
+                            buffer = itoa(va_arg(arg, long), buffer, 16);
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case 'u': {
+                    buffer = itoa(va_arg(arg, unsigned int), buffer, 10);
+                    break;
+                }
                 case 'd': {
-                    int tmp = va_arg(arg, int);
-                    buffer = itoa(tmp, buffer, 10);
+                    buffer = itoa(va_arg(arg, int), buffer, 10);
+                    break;
+                }
+                case 'p': {
+                    buffer = itoa(va_arg(arg, unsigned long), buffer, 16);
                     break;
                 }
                 case 'x': {
-                    int tmp = va_arg(arg, int);
-                    buffer = itoa(tmp, buffer, 16);
+                    buffer = itoa(va_arg(arg, int), buffer, 16);
                     break;
                 }
                 case 'f': {
-                    double tmp = va_arg(arg, double);
-                    buffer = gcvt(tmp, 5, buffer); // TODO: Specifying precision
+                    buffer = gcvt(va_arg(arg, double), 5, buffer);
                     break;
-                }
-                case 'b': {
-                    int tmp = va_arg(arg, int);
-                    buffer = strcpy(buffer, tmp ? "true" : "false");
                 }
             }
         } else {

@@ -3,7 +3,7 @@
 #include <KbController.h>
 #include <VGA.h>
 #include <Interrupts.h>
-#include <macro_foreach.h>
+#include <macros.h>
 
 #define KBD_DATA_PORT       0x60
 #define KBD_SCANCODE_MASK   0x7f
@@ -72,7 +72,7 @@ extern void isr_handler(const ISR_Frame regs) {
 
             // Faulting address is stored in CR2
             asm volatile ("mov %0, cr2" : "=r"(address));
-            printf(&vga, "Address: 0x%x (%d)\n", address, address);
+            printf(&vga, "Address: %lx (%lu)\n", address, address);
 
             printf(&vga, regs.err_code & 1 ? "Page-protection violation\n" : "Non-present page\n");
             printf(&vga, regs.err_code & 2 ? "Write access\n" : "Read access\n");
@@ -89,14 +89,14 @@ extern void isr_handler(const ISR_Frame regs) {
 
     // Register dump
     printf(&vga,
-           "Registers:\nA: %d | B: %d | C: %d | D: %d\nDI: %d | SI: %d\nIP: %d\nBP: %d | SP: %d\nCS: %d | DS: %d | SS: %d\n",
+           "Registers:\nA: %lu | B: %lu | C: %lu | D: %lu\nDI: %lu | SI: %lu\nIP: %lu\nBP: %lu | SP: %lu\nCS: %lu | DS: %lu | SS: %lu\n",
            regs.ax, regs.bx, regs.cx, regs.dx, regs.di, regs.si, regs.ip, regs.bp, regs.sp, regs.cs, regs.ds, regs.ss);
 
     while (true);
 }
 
 extern void irq0_handler(void) {
-    static long long counter = 0;
+    static unsigned long counter = 0;
     static VGA vga = {
             .cursorY = TT_ROWS - 2,
             .rowMin = TT_ROWS - 2,
@@ -106,7 +106,7 @@ extern void irq0_handler(void) {
     };
 
     PIC_send_EOI(0);
-    printf(&vga, "Clock: %d\r", counter++);
+    printf(&vga, "Clock: %lu\r", counter++);
 }
 
 extern void irq1_handler(void) {

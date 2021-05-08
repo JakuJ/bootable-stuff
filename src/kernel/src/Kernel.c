@@ -4,17 +4,14 @@
 #include <IDT.h>
 #include <KbController.h>
 #include <Diagnostics.h>
+#include <string.h>
 
 // Kernel entry point
 extern void kmain() {
     // Initialize resources
     PIC_remap(0x20, 0x28);
     IDT_init();
-    VGA vga = {
-            .rowMax = TT_ROWS,
-            .colMax = TT_COLUMNS,
-            .color = WHITE_ON_BLUE,
-    };
+    VGA vga = VGA_init((VGA) {0});
 
     // Welcome user
     clearScreen(&vga);
@@ -22,11 +19,12 @@ extern void kmain() {
 
     // Print section info
     print_sections(&vga);
+    vga.cursorY++;
 
     // Print information on SSE extensions
     print_sse(&vga);
 
-    printf(&vga, "Interrupts enabled: %b\n", are_interrupts_enabled());
+    printf(&vga, "Interrupts enabled: %s\n", btoa(are_interrupts_enabled()));
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

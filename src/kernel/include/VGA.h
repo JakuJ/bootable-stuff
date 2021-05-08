@@ -16,6 +16,8 @@ typedef struct {
     short color;
 } VGA;
 
+VGA VGA_init(VGA) __attribute__((const));
+
 void clearScreen(VGA *) __attribute__((nonnull));
 
 void putChar(VGA *, char) __attribute__((nonnull));
