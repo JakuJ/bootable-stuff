@@ -2,16 +2,17 @@
 #include <memory/PMM.h>
 #include <VGA.h>
 #include <stdint.h>
+#include <liballoc_1_1.h>
 
 #define ADDRESS_MASK            0xffffffffff000
-#define AVAILABLE_MASK          0b111000000000
-#define PAGE_SIZE_MASK          0b000010000000
-#define ACCESSED_MASK           0b000000100000
-#define CACHE_DISABLED_MASK     0b000000010000
-#define WRITE_THROUGH_MASK      0b000000001000
-#define USER_SUPERVISOR_MASK    0b000000000100
-#define READ_WRITE_MASK         0b000000000010
-#define PRESENT_MASK            0b000000000001
+#define AVAILABLE_MASK          0xe00
+#define PAGE_SIZE_MASK          0x80
+#define ACCESSED_MASK           0x20
+#define CACHE_DISABLED_MASK     0x10
+#define WRITE_THROUGH_MASK      0x8
+#define USER_SUPERVISOR_MASK    0x4
+#define READ_WRITE_MASK         0x2
+#define PRESENT_MASK            0x1
 
 // Kernel heap starts at 1MB virtual
 #define HEAP_START              0x100000
@@ -35,7 +36,8 @@ void *virt2phys(void *virtualaddr) {
     unsigned int pt1_index = ((unsigned long) virtualaddr >> 12) & 0x1ff;
     unsigned int page_offset = (unsigned long) virtualaddr & 0xfff;
 
-    log("[VMM] Accessing memory at indices: %d, %d, %d, %d, %d\n", pt4_index, pt3_index, pt2_index, pt1_index, page_offset);
+    log("[VMM] Accessing memory at indices: %d, %d, %d, %d, %d\n", pt4_index, pt3_index, pt2_index, pt1_index,
+        page_offset);
 
     uint64_t p4_entry = pt4->entries[pt4_index];
     if (p4_entry & PRESENT_MASK) {
@@ -70,24 +72,34 @@ void vmm_init(void) {
 }
 
 typedef struct free_block {
-    uintptr_t start;            // starting address of this block
+    void *start;            // starting address of this block
     size_t size;                // block size in pages
-    struct free_block *prev;           // pointer to previous block
-    struct free_block *next;           // pointer to next block
+    struct free_block *prev;    // pointer to previous block
+    struct free_block *next;    // pointer to next block
 } free_block;
 
-free_block blockchain = {
-        .start = HEAP_START,
+free_block blockchain_base = {
+        .start = (void *) HEAP_START,
         .size = MAX_HEAP_SIZE,
 };
 
+free_block *blockchain = &blockchain_base; // TODO: could result in freeing non-kmalloc-ed struct
+
 void *vmm_allocate_pages(size_t pages) {
-    log("[VMM] Allocating %lu pages\n", pages);
+    if (!blockchain) {
+        log("[VMM] No free space left\n"); // TODO
+        return NULL;
+    }
 
     // find first fit block of empty space
-    free_block *block = &blockchain;
-    while (block->size < pages && block->next) {
+    free_block *block = blockchain;
+    while (block && block->size < pages) {
         block = block->next;
+    }
+
+    if (!block || block->size < pages) {
+        log("[VMM] Not enough space to allocate %lu pages\n", pages); // TODO
+        return NULL;
     }
 
     // shrink the block
@@ -98,10 +110,68 @@ void *vmm_allocate_pages(size_t pages) {
     // TODO: Ensure page is present
     virt2phys(span_start);
 
+    log("[VMM] Allocated %lu pages at %p\n", pages, span_start);
     return span_start;
 }
 
 void vmm_free_pages(void *start, size_t pages) {
-    // TODO
+    // Check if there are no free blocks at all
+    if (!blockchain) {
+        // Create first free block
+        blockchain = kmalloc(sizeof(free_block));
+        *blockchain = (free_block) {
+                .start = start,
+                .size = pages,
+        };
+        log("[VMM] Freeing %lu pages at %p\n", pages, start);
+        return;
+    }
+
+    // Find free blocks to the left and right
+    free_block *left, *right;
+
+    // Check if no free blocks to the left
+    if (blockchain->start > start) {
+        left = NULL;
+        right = blockchain;
+    } else {
+        // At least one block to the left, find it
+        left = blockchain;
+        while (left->next && left->next->start < start) {
+            left = left->next;
+        }
+
+        right = left->next; // can be null
+    }
+
+    // Free space adjacent to the left block
+    if (left && start == left->start + left->size * PAGE_SIZE) {
+        // Extend left block
+        left->size += pages;
+
+        // Try to merge left and right blocks
+        if (right && left->start + left->size * PAGE_SIZE == right->start) {
+            left->size += right->size;
+            left->next = right->next;
+            if (right->next) {
+                right->next->prev = left;
+            }
+            kfree(right);
+        }
+    } else if (right && start + pages * PAGE_SIZE == right->start) {
+        // Merge with right block
+        right->size += pages;
+        right->start -= pages * PAGE_SIZE;
+    } else {
+        // Insert new block
+        free_block *new = kmalloc(sizeof(free_block));
+        *new = (free_block) {
+                .start = start,
+                .size = pages,
+                .prev = left,
+                .next = right,
+        };
+    }
+
     log("[VMM] Freeing %lu pages at %p\n", pages, start);
 }

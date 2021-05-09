@@ -27,13 +27,21 @@ extern void kmain() {
     // Test dynamic memory allocation
     vmm_init();
 
-    for (int i = 0; i < 10; i++) {
-        size_t size = 1;
-        char *array = kmalloc(size);
-        log("malloc array of size %lu at %p\n", size, (void *) array);
-        kfree(array);
-        log("\n");
-    }
+    size_t size = 1;
+    char *array1 = kmalloc(size);
+    log("kmalloc array of size %lu at %p\n", size, (void *) array1);
+
+    size = 4096 * 20; // 20 pages
+    char *array2 = kmalloc(size);
+    log("kmalloc array of size %lu at %p\n", size, (void *) array2);
+
+    size = 100;
+    char *array3 = kmalloc(size);
+    log("kmalloc array of size %lu at %p\n", size, (void *) array3);
+
+    kfree(array2);
+    kfree(array3);
+    kfree(array1);
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

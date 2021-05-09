@@ -5,7 +5,7 @@ LD = x86_64-elf-ld
 
 # Flags
 CFLAGS = -std=gnu11 -masm=intel
-CFLAGS += -O3 -Wall -Wextra -pedantic -fdiagnostics-show-option
+CFLAGS += -O3 -Wall -Wextra -pedantic -Wno-pointer-arith
 CFLAGS += -ffreestanding -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/libc/include
 

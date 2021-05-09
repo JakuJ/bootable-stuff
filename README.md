@@ -13,7 +13,7 @@ Make sure you have the required dependencies:
 - make
 - nasm
 - QEMU (qemu-system-x86_64)
-- x86_64-elf-g++
+- x86_64-elf-gcc
 - x86_64-elf-ld
 
 Then
@@ -40,11 +40,8 @@ to build the image and boot it in QEMU.
     - [ ] Clock config (IRQ 0)
 - Kernel
     - [ ] Handling page faults
-    - [ ] Dynamic memory allocation (`malloc`, `new`)
+    - [x] Kernel heap management (`kmalloc`, `kfree`)
 - Standard library
-    - [x] Basic `type_traits` API for template specialization
-    - [x] Simple `std::function`-like wrappers
-    - [x] VGA-independent `printf`
     - [ ] Porting an actual libc implementation
 
 # Caveats
