@@ -35,7 +35,7 @@ void *virt2phys(void *virtualaddr) {
     unsigned int pt1_index = ((unsigned long) virtualaddr >> 12) & 0x1ff;
     unsigned int page_offset = (unsigned long) virtualaddr & 0xfff;
 
-    log("Indices: %d, %d, %d, %d, %d\n", pt4_index, pt3_index, pt2_index, pt1_index, page_offset);
+    log("[VMM] Accessing memory at indices: %d, %d, %d, %d, %d\n", pt4_index, pt3_index, pt2_index, pt1_index, page_offset);
 
     uint64_t p4_entry = pt4->entries[pt4_index];
     if (p4_entry & PRESENT_MASK) {
@@ -66,11 +66,7 @@ void vmm_init(void) {
 
     // Get P4 root
     asm ("mov %0, cr3" : "=r"(pt4));
-    log("PT4 root at: %p\n", (void *) pt4);
-
-    void *addr = (void *) 0xfffffffffffff000;
-    log("Virt: %p, phys: %p, values: %lx (virt) %lx (phys)\n", addr, virt2phys(addr), *(uint64_t *) addr,
-        *(uint64_t *) virt2phys(addr));
+    log("[VMM] PT4 root at: %p\n", (void *) pt4);
 }
 
 typedef struct free_block {
@@ -86,6 +82,8 @@ free_block blockchain = {
 };
 
 void *vmm_allocate_pages(size_t pages) {
+    log("[VMM] Allocating %lu pages\n", pages);
+
     // find first fit block of empty space
     free_block *block = &blockchain;
     while (block->size < pages && block->next) {
@@ -105,4 +103,5 @@ void *vmm_allocate_pages(size_t pages) {
 
 void vmm_free_pages(void *start, size_t pages) {
     // TODO
+    log("[VMM] Freeing %lu pages at %p\n", pages, start);
 }

@@ -5,8 +5,8 @@
 #include <KbController.h>
 #include <Diagnostics.h>
 #include <string.h>
-#include <memory/PMM.h>
 #include <memory/VMM.h>
+#include <liballoc_1_1.h>
 
 // Kernel entry point
 extern void kmain() {
@@ -24,13 +24,16 @@ extern void kmain() {
 
     log("Interrupts enabled: %s\n", btoa(are_interrupts_enabled()));
 
-    // Test page allocation
+    // Test dynamic memory allocation
     vmm_init();
 
-    vmm_allocate_pages(256); // Allocate a megabyte
-    void *page = vmm_allocate_pages(1); // Outside the 2MB linearly paged region
-    log("Page at: %p (%ld)", page, (unsigned long) page);
-    log(", value: %ld\n", *(uint64_t *) page); // Page fault
+    for (int i = 0; i < 10; i++) {
+        size_t size = 1;
+        char *array = kmalloc(size);
+        log("malloc array of size %lu at %p\n", size, (void *) array);
+        kfree(array);
+        log("\n");
+    }
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

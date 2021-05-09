@@ -30,7 +30,19 @@ void clearScreen(void) {
     }
 }
 
-void ensureCursorInRange(VGA *vga) {
+static void scrollUp(VGA *vga) {
+    for (size_t y = vga->rowMin; y < vga->rowMax - 1; y++) {
+        for (size_t x = vga->colMin; x < vga->colMax; x++) {
+            FRAMEBUFFER[x + y * 80] = FRAMEBUFFER[x + (y + 1) * 80];
+        }
+    }
+    // Clear last line
+    for (size_t x = vga->colMin; x < vga->colMax; x++) {
+        FRAMEBUFFER[x + (vga->rowMax - 1) * 80] = vga->color | ' ';
+    }
+}
+
+static void ensureCursorInRange(VGA *vga) {
     if (vga->cursorX >= vga->colMax) {
         // wrap around X
         vga->cursorX = vga->colMin;
@@ -39,8 +51,9 @@ void ensureCursorInRange(VGA *vga) {
 
     // wrap around Y
     if (vga->cursorY >= vga->rowMax) {
+        scrollUp(vga);
         vga->cursorX = vga->colMin;
-        vga->cursorY = vga->rowMin;
+        vga->cursorY = vga->rowMax - 1;
     }
 }
 

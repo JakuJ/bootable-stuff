@@ -15,11 +15,11 @@ LDFLAGS = -n -T linker.ld
 kernel_asm_sources = $(shell find src/kernel/assembly -maxdepth 1 -name *.asm)
 kernel_asm_objects = $(patsubst src/kernel/assembly%.asm, build/kernel/%.o, $(kernel_asm_sources))
 
-kernel_cpp_sources = $(shell find src/kernel/src -name *.c)
-kernel_objects = $(patsubst src/kernel/src/%.c, build/kernel/%.o, $(kernel_cpp_sources))
+kernel_c_sources = $(shell find src/kernel/src -name *.c)
+kernel_objects = $(patsubst src/kernel/src/%.c, build/kernel/%.o, $(kernel_c_sources))
 
-libc_cpp_sources = $(shell find src/libc/src -name *.c)
-libc_objects = $(patsubst src/libc/src/%.c, build/libc/%.o, $(libc_cpp_sources))
+libc_c_sources = $(shell find src/libc/src -name *.c)
+libc_objects = $(patsubst src/libc/src/%.c, build/libc/%.o, $(libc_c_sources))
 
 kernel_headers = $(shell find src/kernel/include -name *.h)
 libc_headers = $(shell find src/libc/include -name *.h)

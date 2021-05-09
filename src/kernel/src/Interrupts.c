@@ -98,15 +98,15 @@ extern void isr_handler(const ISR_Frame regs) {
 extern void irq0_handler(void) {
     static unsigned long counter = 0;
     static VGA vga = {
-            .cursorY = TT_ROWS - 2,
-            .rowMin = TT_ROWS - 2,
             .rowMax = TT_ROWS,
+            .colMin = 65,
+            .cursorX = 65,
             .colMax = TT_COLUMNS,
             .color = WHITE_ON_BLUE,
     };
 
     PIC_send_EOI(0);
-    printf(&vga, "Clock: %lu\r", counter++);
+    printf(&vga, "Clock: %lu\n", counter++);
 }
 
 extern void irq1_handler(void) {
