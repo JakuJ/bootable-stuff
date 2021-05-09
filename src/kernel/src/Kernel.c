@@ -27,13 +27,10 @@ extern void kmain() {
     // Test page allocation
     vmm_init();
 
-    for (int i = 0; i < 62; i++) {
-        pmm_allocate_page();
-    }
-    for (int i = 0; i < 5; i++) {
-        void *page = pmm_allocate_page();
-        log("Free page at: %p (%lu)\n", page, (unsigned long) page);
-    }
+    vmm_allocate_pages(256); // Allocate a megabyte
+    void *page = vmm_allocate_pages(1); // Outside the 2MB linearly paged region
+    log("Page at: %p (%ld)", page, (unsigned long) page);
+    log(", value: %ld\n", *(uint64_t *) page); // Page fault
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

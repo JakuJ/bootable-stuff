@@ -3,9 +3,13 @@
 #include <stddef.h>
 #include <memory.h>
 
-#define MEM_START 0x100000
-#define PAGE_SIZE 0x1000
-#define PAGES 512
+// Non-linearly page mapped memory starts at 2MB physical
+// TODO: Respect the memory map
+#define MEM_START 0x200000
+#define PAGE_SIZE 4096
+
+// Bootstrap the page manager with 4MB of RAM
+#define PAGES 1024
 
 uint64_t bitmap[PAGES];
 
