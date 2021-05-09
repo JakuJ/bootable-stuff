@@ -57,25 +57,30 @@ setup_paging:
   ; PDT[0] -> PT
   mov eax, PDPT
   or eax, 3
-  mov DWORD [PML4T], eax
+  mov dword [PML4T], eax
 
   mov eax, PDT
   or eax, 3
-  mov DWORD [PDPT], eax
+  mov dword [PDPT], eax
 
   mov eax, PT
   or eax, 3
-  mov DWORD [PDT], eax
+  mov dword [PDT], eax
 
   ; Identity map the first 2MB
   mov ebx, 0x00000003          ; Physical address | flags
   mov ecx, 512                 ; Iteration counter
   mov edi, PT                  ; Pointer to the current PT cell
   .set_entry:
-    mov DWORD [edi], ebx
+    mov dword [edi], ebx
     add ebx, 0x1000            ; Move to the next page
     add edi, 8                 ; Move to the next PT cell
     loop .set_entry
+
+  ; Apply recursive mapping (last PML4T entry to itself)
+  mov eax, PML4T
+  or eax, 3
+  mov dword [PML4T + 511 * 8], eax
 
   ; Enable PAE (Physical Address Extension)
   mov eax, cr4                 ; Set the A-register to control register 4.

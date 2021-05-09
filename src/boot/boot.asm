@@ -91,9 +91,17 @@ mov ss, ax
 ; Update stack pointer
 mov rsp, kernel_stack_top
 
+; Execute global constructors
+extern _init
+call _init
+
 ; Execute kernel code
 extern kmain
 call kmain
+
+; Execute cleanup routines
+extern _fini
+call _fini
 
 ; Halt
 cli

@@ -13,12 +13,19 @@ VGA VGA_init(VGA vga) {
     return vga;
 }
 
-void clearScreen(VGA *vga) {
-    vga->cursorX = vga->colMin;
-    vga->cursorY = vga->rowMin;
-    for (unsigned x = vga->colMin; x < vga->colMax; x++) {
-        for (unsigned y = vga->rowMin; y < vga->rowMax; y++) {
-            putChar(vga, ' ');
+VGA kernel_vga;
+
+__attribute__((constructor))
+static void init_global_VGA(void) {
+    kernel_vga = VGA_init((VGA) {0});
+}
+
+void clearScreen(void) {
+    kernel_vga.cursorX = kernel_vga.colMin;
+    kernel_vga.cursorY = kernel_vga.rowMin;
+    for (unsigned x = kernel_vga.colMin; x < kernel_vga.colMax; x++) {
+        for (unsigned y = kernel_vga.rowMin; y < kernel_vga.rowMax; y++) {
+            putChar(&kernel_vga, ' ');
         }
     }
 }
@@ -66,6 +73,21 @@ void printf(VGA *vga, const char *fmt, ...) {
     char *ptr = buffer;
     while (*ptr) {
         putChar(vga, *ptr++);
+    }
+
+    va_end(arg);
+}
+
+void log(const char *fmt, ...) {
+    va_list arg;
+    va_start(arg, fmt);
+
+    char buffer[512];
+    vsprintf(buffer, fmt, arg);
+
+    char *ptr = buffer;
+    while (*ptr) {
+        putChar(&kernel_vga, *ptr++);
     }
 
     va_end(arg);

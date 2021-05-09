@@ -4,9 +4,9 @@ CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
 
 # Flags
-CFLAGS = -std=gnu11 -masm=intel -ffreestanding
-CFLAGS += -O3 -Wall -Wextra -pedantic
-CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
+CFLAGS = -std=gnu11 -masm=intel
+CFLAGS += -O3 -Wall -Wextra -pedantic -fdiagnostics-show-option
+CFLAGS += -ffreestanding -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/libc/include
 
 LDFLAGS = -n -T linker.ld
@@ -27,14 +27,23 @@ libc_headers = $(shell find src/libc/include -name *.h)
 bootloader_sources = $(shell find src/boot -maxdepth 1 -name *.asm)
 bootloader_objs = $(patsubst src/boot/%.asm, build/boot/%.o, $(bootloader_sources))
 
-obj_link_list = $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(libc_objects)
+# Global constructor support
+crti_obj = build/boot/crti.o
+crtn_obj = build/boot/crtn.o
+crtbegin_obj = $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
+crtend_obj = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
+
+bootloader_objs := $(filter-out $(crti_obj) $(crtn_obj),$(bootloader_objs))
+
+all_objects = $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(libc_objects)
+obj_link_list = $(crti_obj) $(crtbegin_obj) $(all_objects) $(crtend_obj) $(crtn_obj)
 
 image_file = build/image.bin
 
 # Targets
 build: $(image_file) count_sectors
 
-$(bootloader_objs): build/boot/%.o : src/boot/%.asm
+$(bootloader_objs) $(crti_obj) $(crtn_obj): build/boot/%.o : src/boot/%.asm
 	mkdir -p $(dir $@) && \
 	$(AS) -o $@ $^
 

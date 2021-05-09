@@ -18,8 +18,10 @@ typedef struct {
 
 VGA VGA_init(VGA) __attribute__((const));
 
-void clearScreen(VGA *) __attribute__((nonnull));
+void clearScreen(void);
 
 void putChar(VGA *, char) __attribute__((nonnull));
 
 void printf(VGA *, const char *, ...) __attribute__((format (printf, 2, 3), nonnull));
+
+void log(const char*, ...) __attribute__((format (printf, 1, 2), nonnull));
