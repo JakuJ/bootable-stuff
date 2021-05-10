@@ -105,9 +105,11 @@ extern void isr_handler(const ISR_Frame regs) {
     }
 
     // Register dump
-    printf(&vga,
-           "Registers:\nA: %lx | B: %lx | C: %lx | D: %lx\nDI: %lx | SI: %lx\nIP: %lx\nBP: %lx | SP: %lx\nCS: %lx | DS: %lx | SS: %lx\n",
-           regs.ax, regs.bx, regs.cx, regs.dx, regs.di, regs.si, regs.ip, regs.bp, regs.sp, regs.cs, regs.ds, regs.ss);
+    printf(&vga, "Registers:\nA: %lx | B: %lx | C: %lx | D: %lx\n", regs.ax, regs.bx, regs.cx, regs.dx);
+    printf(&vga, "DI: %lx | SI: %lx\nIP: %lx\nBP: %lx | SP: %lx\n", regs.di, regs.si, regs.ip, regs.bp, regs.sp);
+    printf(&vga, "CS: %lx | DS: %lx | SS: %lx\n", regs.cs, regs.ds, regs.ss);
+    printf(&vga, "R8: %lx | R9: %lx | R10: %lx | R11: %lx\n", regs.r8, regs.r9, regs.r10, regs.r11);
+    printf(&vga, "R12: %lx | R13: %lx | R14: %lx | R15: %lx\n", regs.r12, regs.r13, regs.r14, regs.r15);
 
     while (true);
 }

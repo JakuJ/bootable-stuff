@@ -6,7 +6,8 @@ LD = x86_64-elf-ld
 # Flags
 CFLAGS = -std=gnu11 -masm=intel
 CFLAGS += -O3 -Wall -Wextra -pedantic -Wno-pointer-arith
-CFLAGS += -ffreestanding -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
+CFLAGS += -ffreestanding -nostdlib -mno-red-zone
+CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/libc/include
 
 LDFLAGS = -n -T linker.ld
@@ -71,7 +72,7 @@ qemu64: build
 
 hvf: build
 	qemu-system-x86_64 \
-	-M accel=hvf -cpu host,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+xsave,+avx,+avx2 \
+	-M accel=hvf -cpu host,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+xsave \
 	-drive format=raw,file=$(image_file)
 
 count_sectors: $(image_file)

@@ -102,10 +102,10 @@ static long long l_possibleOverruns = 0;    ///< Number of possible overruns
 // ***********   HELPER FUNCTIONS  *******************************
 
 static void *liballoc_memset(void *s, char c, size_t n) {
-    volatile size_t i;
-    for (i = 0; i < n; i++)
-        ((char *) s)[i] = c;
-
+    char *ptr = (char *) s;
+    for (size_t i = 0; i < n; i++) {
+        ptr[i] = c;
+    }
     return s;
 }
 
@@ -670,12 +670,10 @@ void PREFIX(free)(void *ptr) {
 
 
 void *PREFIX(calloc)(size_t nobj, size_t size) {
-    int real_size;
-    void *p;
+    size_t real_size = nobj * size;
 
-    real_size = nobj * size;
-
-    p = PREFIX(malloc)(real_size);
+    void* p = PREFIX(malloc)(real_size);
+    if (!p) return NULL;
 
     liballoc_memset(p, 0, real_size);
 

@@ -77,11 +77,6 @@ setup_paging:
     add edi, 8                 ; Move to the next PT cell
     loop .set_entry
 
-  ; Apply recursive mapping (last PML4T entry to itself)
-  mov eax, PML4T
-  or eax, 3
-  mov dword [PML4T + 511 * 8], eax
-
   ; Enable PAE (Physical Address Extension)
   mov eax, cr4                 ; Set the A-register to control register 4.
   or eax, 1 << 5               ; Set the PAE-bit, which is the 6th bit (bit 5).

@@ -19,9 +19,9 @@
 // Kernel heap starts at 2MB virtual
 #define HEAP_START              0x200000
 
-// 128GB virtual address space for now
+// 128MB virtual address space for now (-2 MB linearly mapped)
 // TODO: Unlimited memory with swapping
-#define MAX_HEAP_SIZE           256 * 128
+#define MAX_HEAP_SIZE           (256 * 126)
 
 #define PAGE_SIZE               4096
 
@@ -33,6 +33,7 @@ PT *pt4;
 
 static PT *allocate_page_table(void) {
     void *table = pmm_allocate_page_table();
+//    log("New PT at %p\n", table);
     kmemset(table, 0, PAGE_SIZE);
     return (PT *) table;
 }
@@ -91,7 +92,7 @@ bool ensure_page_present(void *virtualaddr) {
 
         // Map page to address
         page_table->entries[page_index] = (uint64_t) page | 0x3; // read/write, present
-        log("[VMM] Mapped virt %p to phys %p\n", virtualaddr, page);
+//        log("[VMM] Mapped virt %p to phys %p\n", virtualaddr, page);
 
         flush_tlb(page);
         any_changed = true;
@@ -130,6 +131,14 @@ free_block blockchain_base = {
 
 free_block *blockchain = &blockchain_base; // TODO: could result in freeing non-kmalloc-ed struct
 
+static void print_blockchain(free_block *block) {
+    log("Blockchain:\n");
+    while (block) {
+        log("%lu KB from %p\n", block->size * 4, block->start);
+        block = block->next;
+    }
+}
+
 void *vmm_allocate_pages(size_t pages) {
     if (!blockchain) {
         log("[VMM] No free space left\n"); // TODO
@@ -150,7 +159,6 @@ void *vmm_allocate_pages(size_t pages) {
     void *span_start = (void *) block->start;
     if (ensure_pages_present(span_start, pages)) {
         // Try again if paging structures changed
-        log("[VMM] Recursive call\n");
         return vmm_allocate_pages(pages);
     }
 
@@ -159,6 +167,7 @@ void *vmm_allocate_pages(size_t pages) {
     block->size -= pages;
 
     log("[VMM] Allocated %lu pages at %p\n", pages, span_start);
+    print_blockchain(blockchain);
     return span_start;
 }
 
@@ -174,6 +183,7 @@ void vmm_free_pages(void *start, size_t pages) {
                 .size = pages,
         };
         log("[VMM] Freed %lu pages at %p\n", pages, start);
+        print_blockchain(blockchain);
         return;
     }
 
@@ -206,7 +216,8 @@ void vmm_free_pages(void *start, size_t pages) {
             if (right->next) {
                 right->next->prev = left;
             }
-            kfree(right);
+            log("[VMM] UNSAFE - freeing block\n");
+            kfree(right); // TODO: No idea whether this works
         }
     } else if (right && start + pages * PAGE_SIZE == right->start) {
         // Merge with right block
@@ -224,4 +235,5 @@ void vmm_free_pages(void *start, size_t pages) {
     }
 
     log("[VMM] Freed %lu pages at %p\n", pages, start);
+    print_blockchain(blockchain);
 }
