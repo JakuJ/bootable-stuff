@@ -21,13 +21,13 @@ static void init_global_VGA(void) {
 }
 
 void clearScreen(void) {
-    kernel_vga.cursorX = kernel_vga.colMin;
-    kernel_vga.cursorY = kernel_vga.rowMin;
-    for (unsigned x = kernel_vga.colMin; x < kernel_vga.colMax; x++) {
-        for (unsigned y = kernel_vga.rowMin; y < kernel_vga.rowMax; y++) {
+    for (unsigned y = kernel_vga.rowMin; y < kernel_vga.rowMax; y++) {
+        for (unsigned x = kernel_vga.colMin; x < kernel_vga.colMax; x++) {
             putChar(&kernel_vga, ' ');
         }
     }
+    kernel_vga.cursorX = kernel_vga.colMin;
+    kernel_vga.cursorY = kernel_vga.rowMin;
 }
 
 static void scrollUp(VGA *vga) {
@@ -54,6 +54,7 @@ static void ensureCursorInRange(VGA *vga) {
         scrollUp(vga);
         vga->cursorX = vga->colMin;
         vga->cursorY = vga->rowMax - 1;
+//        vga->cursorY = vga->rowMin;
     }
 }
 

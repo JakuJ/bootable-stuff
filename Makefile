@@ -65,8 +65,8 @@ $(image_file): $(obj_link_list)
 .PHONY: qemu64 hvf clean count_sectors
 
 qemu64: build
-	qemu-system-x86_64 \
-	-cpu qemu64,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4a,+sse4.1,+sse4.2,+xsave,+avx,+avx2 \
+	qemu-system-x86_64 -no-reboot \
+	-cpu qemu64,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4a,+sse4.1,+sse4.2,+xsave \
 	-drive format=raw,file=$(image_file)
 
 hvf: build

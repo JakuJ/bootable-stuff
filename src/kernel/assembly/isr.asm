@@ -34,8 +34,10 @@ ISR_ERRCODE 13
 ISR_ERRCODE 14
 ISR_NOERRCODE 15
 ISR_NOERRCODE 16
-ISR_NOERRCODE 17 ; Some sources say 17 and 21 DO HAVE error codes
+ISR_ERRCODE 17
 ISR_NOERRCODE 18
+ISR_NOERRCODE 19
+ISR_NOERRCODE 20
 
 isr_common_stub:
   cli                 ; disable interrupts on exception

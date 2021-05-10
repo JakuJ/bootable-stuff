@@ -5,8 +5,8 @@
 #include <KbController.h>
 #include <Diagnostics.h>
 #include <string.h>
-#include <memory/VMM.h>
 #include <liballoc_1_1.h>
+#include <memory.h>
 
 // Kernel entry point
 extern void kmain() {
@@ -25,23 +25,10 @@ extern void kmain() {
     log("Interrupts enabled: %s\n", btoa(are_interrupts_enabled()));
 
     // Test dynamic memory allocation
-    vmm_init();
-
-    size_t size = 1;
-    char *array1 = kmalloc(size);
-    log("kmalloc array of size %lu at %p\n", size, (void *) array1);
-
-    size = 4096 * 20; // 20 pages
-    char *array2 = kmalloc(size);
-    log("kmalloc array of size %lu at %p\n", size, (void *) array2);
-
-    size = 100;
-    char *array3 = kmalloc(size);
-    log("kmalloc array of size %lu at %p\n", size, (void *) array3);
-
-    kfree(array2);
-    kfree(array3);
-    kfree(array1);
+    const int mb = 0x100000;
+    const int num = 5;
+    void *mem = kcalloc(num, mb);
+    kfree(mem);
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

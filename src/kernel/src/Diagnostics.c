@@ -39,9 +39,11 @@ void print_sse(void) {
         log("AVX: %s\n", btoa(avx));
         log("AVX2: %s\n", btoa(query_cpu(7, 1, 5)));
         log("AVX512: %s\n", btoa(query_cpu(7, 1, 16)));
+#ifdef __AVX__
         if (avx) {
             enable_avx();
             log("AVX enabled\n");
         }
+#endif
     }
 }

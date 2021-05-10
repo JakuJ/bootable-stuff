@@ -38,6 +38,10 @@ extern int isr17();
 
 extern int isr18();
 
+extern int isr19();
+
+extern int isr20();
+
 extern int irq0();
 
 extern int irq1();
@@ -134,6 +138,8 @@ void IDT_init(void) {
     register_isr(isr16, 16);
     register_isr(isr17, 17);
     register_isr(isr18, 18);
+    register_isr(isr19, 19);
+    register_isr(isr20, 20);
 
     // Register other interrupt handlers
     register_irq(irq0, 32);

@@ -83,13 +83,30 @@ extern void isr_handler(const ISR_Frame regs) {
             if (regs.err_code & 16) {
                 printf(&vga, "Caused by an instruction fetch\n");
             }
+
+            // Trace paging structures
+            unsigned int pt4_index = ((unsigned long) address >> 39) & 0x1ff;
+            unsigned int pt3_index = ((unsigned long) address >> 30) & 0x1ff;
+            unsigned int pt2_index = ((unsigned long) address >> 21) & 0x1ff;
+            unsigned int page_index = ((unsigned long) address >> 12) & 0x1ff;
+
+            unsigned long *p4, *p3, *p2, *p1;
+            asm ("mov %0, cr3" : "=r"(p4));
+            printf(&vga, "PML4T at: %p\n", (void *) p4);
+            printf(&vga, "PML4T entry %u : %lx\n", pt4_index, p4[pt4_index]);
+            p3 = (unsigned long *) (p4[pt4_index] & ~0xfff);
+            printf(&vga, "PDPT entry %u: %lx\n", pt3_index, p3[pt3_index]);
+            p2 = (unsigned long *) (p3[pt3_index] & ~0xfff);
+            printf(&vga, "PDT entry %u: %lx\n", pt2_index, p2[pt2_index]);
+            p1 = (unsigned long *) (p2[pt2_index] & ~0xfff);
+            printf(&vga, "PT entry %u: %lx\n", page_index, p1[page_index] & 0xffffffffffffUL);
             break;
         }
     }
 
     // Register dump
     printf(&vga,
-           "Registers:\nA: %lu | B: %lu | C: %lu | D: %lu\nDI: %lu | SI: %lu\nIP: %lu\nBP: %lu | SP: %lu\nCS: %lu | DS: %lu | SS: %lu\n",
+           "Registers:\nA: %lx | B: %lx | C: %lx | D: %lx\nDI: %lx | SI: %lx\nIP: %lx\nBP: %lx | SP: %lx\nCS: %lx | DS: %lx | SS: %lx\n",
            regs.ax, regs.bx, regs.cx, regs.dx, regs.di, regs.si, regs.ip, regs.bp, regs.sp, regs.cs, regs.ds, regs.ss);
 
     while (true);
@@ -99,8 +116,8 @@ extern void irq0_handler(void) {
     static unsigned long counter = 0;
     static VGA vga = {
             .rowMax = TT_ROWS,
-            .colMin = 65,
-            .cursorX = 65,
+            .colMin = 67,
+            .cursorX = 67,
             .colMax = TT_COLUMNS,
             .color = WHITE_ON_BLUE,
     };
