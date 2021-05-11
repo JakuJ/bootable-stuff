@@ -124,13 +124,8 @@ typedef struct free_block {
     struct free_block *next;    // pointer to next block
 } free_block;
 
-free_block blockchain_base = {
-        .start = (void *) HEAP_START,
-        .size = MAX_HEAP_SIZE,
-};
-
-free_block *blockchain = &blockchain_base;
-free_block *non_heap_block = &blockchain_base;
+free_block *blockchain = NULL;
+bool first_alloc = true, allocating_base = false;
 
 static void print_blockchain(void) {
     free_block *block = blockchain;
@@ -143,27 +138,45 @@ static void print_blockchain(void) {
 
     log("Blockchain:\n");
     while (block) {
-        log("[%p, %p) (%lu KB)\n", block->start, block->start + block->size * PAGE_SIZE, block->size * 4);
-        total += block->size * 4;
+        log("[%p, %p) (%lu pages)\n", block->start, block->start + block->size * PAGE_SIZE, block->size);
+        total += block->size;
         block = block->next;
     }
-    log("Total: %lu KB\n", total);
+    log("Total: %lu pages\n", total);
 }
 
 void *vmm_allocate_pages(size_t pages) {
     if (!blockchain) {
-        log("[VMM] No free space left\n"); // TODO
-        return NULL;
+        if (first_alloc) {
+            if (!allocating_base) {
+                allocating_base = true;
+                blockchain = (free_block *) kmalloc(sizeof(free_block));
+                *blockchain = (free_block) {
+                        .start = (void *) (HEAP_START + pages * PAGE_SIZE),
+                        .size = MAX_HEAP_SIZE - pages,
+                };
+            } else {
+                allocating_base = false;
+                first_alloc = false;
+
+                void *start = (void *) HEAP_START;
+                ensure_pages_present(start, pages);
+                return start;
+            }
+        } else {
+            log("[VMM] No free space left\n"); // TODO
+            return NULL;
+        }
     }
 
-    // find first fit block of empty space
+    // find first block of empty space that's big enough
     free_block *block = blockchain;
     while (block && block->size < pages) {
         block = block->next;
     }
 
     if (!block || block->size < pages) {
-        log("[VMM] Not enough space to allocate %lu pages\n", pages); // TODO
+        log("[VMM] Not enough space to allocate %lu pages\n", pages);
         return NULL;
     }
 
@@ -177,8 +190,24 @@ void *vmm_allocate_pages(size_t pages) {
     block->start += pages * PAGE_SIZE;
     block->size -= pages;
 
+    // if block is empty, delete it
+    if (!block->size) {
+        if (block->prev) {
+            block->prev->next = block->next;
+        }
+        if (block->next) {
+            block->next->prev = block->prev;
+        }
+
+        // that could be the blockchain base
+        if (block == blockchain) {
+            blockchain = block->next;
+        }
+
+        kfree(block);
+    }
+
     log("[VMM] Allocated %lu pages at %p\n", pages, span_start);
-//    print_blockchain();
     return span_start;
 }
 
@@ -230,9 +259,7 @@ void vmm_free_pages(void *start, size_t pages) {
             if (right->next) {
                 right->next->prev = left;
             }
-            if (right != non_heap_block) {
-                kfree(right);
-            }
+            kfree(right);
         }
     } else if (right && start + pages * PAGE_SIZE == right->start) {
         // Merge with right block
