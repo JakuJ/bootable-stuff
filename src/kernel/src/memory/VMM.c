@@ -129,14 +129,25 @@ free_block blockchain_base = {
         .size = MAX_HEAP_SIZE,
 };
 
-free_block *blockchain = &blockchain_base; // TODO: could result in freeing non-kmalloc-ed struct
+free_block *blockchain = &blockchain_base;
+free_block *non_heap_block = &blockchain_base;
 
-static void print_blockchain(free_block *block) {
+static void print_blockchain(void) {
+    free_block *block = blockchain;
+    while (block->prev) {
+        block = block->prev;
+    }
+
+    blockchain = block;
+    size_t total = 0;
+
     log("Blockchain:\n");
     while (block) {
-        log("%lu KB from %p\n", block->size * 4, block->start);
+        log("[%p, %p) (%lu KB)\n", block->start, block->start + block->size * PAGE_SIZE, block->size * 4);
+        total += block->size * 4;
         block = block->next;
     }
+    log("Total: %lu KB\n", total);
 }
 
 void *vmm_allocate_pages(size_t pages) {
@@ -167,12 +178,12 @@ void *vmm_allocate_pages(size_t pages) {
     block->size -= pages;
 
     log("[VMM] Allocated %lu pages at %p\n", pages, span_start);
-    print_blockchain(blockchain);
+//    print_blockchain();
     return span_start;
 }
 
 void vmm_free_pages(void *start, size_t pages) {
-    log("[VMM] Attempting to free %lu pages at %p\n", pages, start);
+//    log("[VMM] Attempting to free %lu pages at %p\n", pages, start);
 
     // Check if there are no free blocks at all
     if (!blockchain) {
@@ -183,7 +194,7 @@ void vmm_free_pages(void *start, size_t pages) {
                 .size = pages,
         };
         log("[VMM] Freed %lu pages at %p\n", pages, start);
-        print_blockchain(blockchain);
+        print_blockchain();
         return;
     }
 
@@ -201,8 +212,11 @@ void vmm_free_pages(void *start, size_t pages) {
             left = left->next;
         }
 
-        right = left->next; // can be null
+        right = left->next;
     }
+
+    // TODO: This log causes *invalid opcode*
+    // log("[VMM] Left %p, right %p\n", (void *) left, (void *) right);
 
     // Free space adjacent to the left block
     if (left && start == left->start + left->size * PAGE_SIZE) {
@@ -216,8 +230,9 @@ void vmm_free_pages(void *start, size_t pages) {
             if (right->next) {
                 right->next->prev = left;
             }
-            log("[VMM] UNSAFE - freeing block\n");
-            kfree(right); // TODO: No idea whether this works
+            if (right != non_heap_block) {
+                kfree(right);
+            }
         }
     } else if (right && start + pages * PAGE_SIZE == right->start) {
         // Merge with right block
@@ -232,8 +247,14 @@ void vmm_free_pages(void *start, size_t pages) {
                 .prev = left,
                 .next = right,
         };
+        if (left) {
+            left->next = new;
+        }
+        if (right) {
+            right->prev = new;
+        }
     }
 
     log("[VMM] Freed %lu pages at %p\n", pages, start);
-    print_blockchain(blockchain);
+    print_blockchain();
 }

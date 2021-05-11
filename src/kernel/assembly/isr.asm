@@ -5,15 +5,15 @@ section .text
 %macro ISR_NOERRCODE 1
   global isr%1
   isr%1:
-    push byte 0 ; Dummy error code for stack consistency
-    push byte %1
+    push qword 0 ; Dummy error code for stack consistency
+    push qword %1
     jmp isr_common_stub
 %endmacro
 
 %macro ISR_ERRCODE 1
   global isr%1
   isr%1:
-    push byte %1
+    push qword %1
     jmp isr_common_stub
 %endmacro
 
@@ -43,6 +43,7 @@ isr_common_stub:
   cli                 ; disable interrupts on exception
   push_all            ; push edi,esi,ebp,esp,ebx,edx,ecx,eax
 
+  xor rax, rax
   mov ax, ds
   push rax            ; save the data segment descriptor
 
@@ -63,5 +64,5 @@ isr_common_stub:
   mov gs, ax
 
   pop_all             ; pop registers
-  add rsp, 2          ; pop the pushed error code and pushed ISR number
+  add rsp, 8          ; pop the pushed error code and pushed ISR number
   iretq               ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP

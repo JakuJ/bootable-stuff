@@ -117,7 +117,7 @@ extern void isr_handler(const ISR_Frame regs) {
 extern void irq0_handler(void) {
     static unsigned long counter = 0;
     static VGA vga = {
-            .rowMax = TT_ROWS,
+            .rowMax = 1,
             .colMin = 67,
             .cursorX = 67,
             .colMax = TT_COLUMNS,
@@ -125,7 +125,7 @@ extern void irq0_handler(void) {
     };
 
     PIC_send_EOI(0);
-    printf(&vga, "Clock: %lu\n", counter++);
+    printf(&vga, "Clock: %lu\r", counter++);
 }
 
 extern void irq1_handler(void) {
