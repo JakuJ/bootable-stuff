@@ -164,7 +164,7 @@ void *vmm_allocate_pages(size_t pages) {
                 return start;
             }
         } else {
-            log("[VMM] No free space left\n"); // TODO
+            log("[VMM] No free space left\n");
             return NULL;
         }
     }
@@ -212,8 +212,6 @@ void *vmm_allocate_pages(size_t pages) {
 }
 
 void vmm_free_pages(void *start, size_t pages) {
-//    log("[VMM] Attempting to free %lu pages at %p\n", pages, start);
-
     // Check if there are no free blocks at all
     if (!blockchain) {
         // Create first free block
@@ -243,9 +241,6 @@ void vmm_free_pages(void *start, size_t pages) {
 
         right = left->next;
     }
-
-    // TODO: This log causes *invalid opcode*
-    // log("[VMM] Left %p, right %p\n", (void *) left, (void *) right);
 
     // Free space adjacent to the left block
     if (left && start == left->start + left->size * PAGE_SIZE) {

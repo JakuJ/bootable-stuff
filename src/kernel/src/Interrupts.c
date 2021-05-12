@@ -51,7 +51,7 @@ extern void isr_handler(const ISR_Frame regs) {
     if (regs.int_no < NUM_EXCEPTIONS) {
         printf(&vga, "Exception: %s\n", exceptions[regs.int_no]);
     } else {
-        printf(&vga, "Unknown exception: %d\n", regs.int_no);
+        printf(&vga, "Unknown exception: %lu\n", regs.int_no);
     }
 
     // Special handing for some exceptions
@@ -63,7 +63,7 @@ extern void isr_handler(const ISR_Frame regs) {
                 } else {
                     const char *sources[] = {"GDT", "IDT", "LDT", "IDT"};
                     printf(&vga, "Source: %s\n", sources[(regs.err_code >> 1) & 0x3]);
-                    printf(&vga, "Selector index: %d\n", (regs.err_code >> 3) & 0x1ffff);
+                    printf(&vga, "Selector index: %lu\n", (regs.err_code >> 3) & 0x1ffff);
                 }
             }
             break;

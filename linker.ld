@@ -2,7 +2,7 @@ ENTRY(boot)
 OUTPUT_FORMAT("binary")
 SECTIONS {
     . = 0x7c00;
-    .text.boot : {
+    .boot : {
         _BOOT_START_ = .;
         *(.boot)
         _BOOT_END_ = .;
@@ -13,7 +13,7 @@ SECTIONS {
     .text : ALIGN(4K)
     {
         _TEXT_START_ = .;
-        *(.text)
+        *(.text*)
         _TEXT_END_ = .;
     }
     .rodata : ALIGN(4K)
@@ -32,6 +32,7 @@ SECTIONS {
     {
         _BSS_START_ = .;
         *(.bss)
+        *(COMMON)
         _BSS_END_ = .;
     }
 }

@@ -6,7 +6,7 @@ LD = x86_64-elf-ld
 # Flags
 CFLAGS = -std=gnu11 -masm=intel
 CFLAGS += -O3 -Wall -Wextra -pedantic -Wno-pointer-arith
-CFLAGS += -ffreestanding -nostdlib -mno-red-zone
+CFLAGS += -ffreestanding -mno-red-zone -fno-asynchronous-unwind-tables
 CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/libc/include
 
@@ -41,9 +41,13 @@ obj_link_list = $(crti_obj) $(crtbegin_obj) $(all_objects) $(crtend_obj) $(crtn_
 
 image_file = build/image.bin
 
-# Targets
+# General build targets
 build: $(image_file) count_sectors
 
+ubsan: CFLAGS += -Os -fsanitize=undefined
+ubsan: build
+
+# Object file targets
 $(bootloader_objs) $(crti_obj) $(crtn_obj): build/boot/%.o : src/boot/%.asm
 	mkdir -p $(dir $@) && \
 	$(AS) -o $@ $^
@@ -63,16 +67,17 @@ $(libc_objects): build/libc/%.o : src/libc/src/%.c $(libc_headers)
 $(image_file): $(obj_link_list)
 	$(LD) -o $@ $(obj_link_list) $(LDFLAGS)
 
-.PHONY: qemu64 hvf clean count_sectors
+.PHONY: build ubsan qemu64 hvf clean count_sectors disassemble
 
 qemu64: build
 	qemu-system-x86_64 -no-reboot \
 	-cpu qemu64,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4a,+sse4.1,+sse4.2,+xsave \
 	-drive format=raw,file=$(image_file)
 
-hvf: build
+# cannot use SSE, so might as well compile with -Os and UBSAN
+hvf: ubsan
 	qemu-system-x86_64 \
-	-M accel=hvf -cpu host,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4.1,+sse4.2,+xsave \
+	-M accel=hvf -cpu host,+xsave \
 	-drive format=raw,file=$(image_file)
 
 count_sectors: $(image_file)
@@ -80,6 +85,9 @@ count_sectors: $(image_file)
 	@echo "scale=4; `wc -c $(image_file) | sed 's/[^0-9]//g'` / 512" | bc -lq
 	@printf "Currently loaded by bootloader: "
 	@cat src/boot/include/sectors.asm | sed 's/[^0-9]//g'
+
+disassemble:
+	objdump -D -Mintel,x86-64 -b binary -m i386 build/image.bin > dis.txt
 
 clean:
 	rm -rf build/*

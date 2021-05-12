@@ -1,5 +1,4 @@
 #include <string.h>
-#include <stdbool.h>
 
 void vsprintf(char *buffer, char const *fmt, va_list arg) {
     char ch;

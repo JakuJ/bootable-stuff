@@ -20,7 +20,7 @@ Then
 
 ```shell
 make qemu64   # anywhere
-make hvf      # only on MacOS
+make hvf      # on MacOS
 ```
 
 to build the image and boot it in QEMU.
@@ -38,9 +38,12 @@ to build the image and boot it in QEMU.
     - [x] Event-based system for handing keyboard interrupts
     - [ ] Handling special keys and combinations (shift, backspace...)
     - [ ] Clock config (IRQ 0)
-- Kernel
+- Memory management
     - [ ] Handling page faults
+    - [x] Physical memory manager
+    - [x] Virtual memory manager
     - [x] Kernel heap management (`kmalloc`, `kfree`)
+        - [x] Porting [liballoc](https://github.com/blanham/liballoc)
 - Standard library
     - [ ] Porting an actual libc implementation
 
@@ -55,14 +58,15 @@ However, QEMU's [TCG](https://wiki.qemu.org/Features/TCG) cannot translate AVX i
 emulated. This means that we cannot actually use AVX to vectorize kernel code. Attempting to compile the kernel
 with `-mavx` will result in a **General Protection Fault**.
 
-Running with MacOS's Hypervisor does not solve the issue.
-
 ### HVF acceleration
 
-On MacOS, `qemu-system-x86_64` does not allow unsigned binaries to use Hypervisor acceleration.
+On MacOS, it is possible to run the kernel with Hypervisor acceleration. However, `qemu-system-x86_64` on Mac does not
+allow unsigned binaries to use it.
 
 To sign the QEMU binary, run the following command from repository root:
 
 ```shell
 codesign -s - --entitlements qemu/app.entitlements --force "$(command -v qemu-system-x86_64)"
 ```
+
+Note that the HVF in QEMU **does not support SSE**. Do not compile with `-O3` if you want to use the `hvf` target.

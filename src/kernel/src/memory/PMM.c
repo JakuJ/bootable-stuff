@@ -21,9 +21,9 @@ static void pmm_init(void) {
 static void *allocate_page_from(uintptr_t start) {
     size_t i = (start - RESERVED_START) / PAGE_SIZE / 64;
 
-    volatile uint64_t first_set;
+    uint64_t first_set;
     for (; i < PAGES; i++) {
-        asm ("lzcnt %0, %1" : "=r"(first_set) : "r"(bitmap[i]));
+        asm ("bsr %0, %1" : "=r"(first_set) : "r"(bitmap[i]));
         if (first_set != 0) {
             bitmap[i] &= ~(1UL << first_set);
             return (void *) (RESERVED_START + PAGE_SIZE * (64 * i + (63 - first_set)));
