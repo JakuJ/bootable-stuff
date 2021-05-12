@@ -64,10 +64,13 @@ extern void *liballoc_alloc(size_t);
 extern int liballoc_free(void *, size_t);
 
 
-extern void *PREFIX(malloc)(size_t);                ///< The standard function.
-extern void *PREFIX(realloc)(void *, size_t);        ///< The standard function.
-extern void *PREFIX(calloc)(size_t, size_t);        ///< The standard function.
-extern void     PREFIX(free)(void *);                    ///< The standard function.
+extern void *PREFIX(malloc)(size_t) __attribute((malloc, alloc_size(1)));
+
+extern void *PREFIX(realloc)(void *, size_t) __attribute((alloc_size(2)));
+
+extern void *PREFIX(calloc)(size_t, size_t) __attribute((malloc, alloc_size(1, 2)));
+
+extern void PREFIX(free)(void *);
 
 
 #ifdef __cplusplus

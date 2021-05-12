@@ -1,24 +1,13 @@
 #include <VGA.h>
 #include <string.h>
-#include <macros.h>
 
 #define FRAMEBUFFER ((short *) 0xb8000)
 
-VGA VGA_init(VGA vga) {
-    DEFAULT(vga.rowMax, TT_ROWS);
-    DEFAULT(vga.colMax, TT_COLUMNS);
-    DEFAULT(vga.cursorX, vga.colMin);
-    DEFAULT(vga.cursorY, vga.rowMin);
-    DEFAULT(vga.color, WHITE_ON_BLUE);
-    return vga;
-}
-
-VGA kernel_vga;
-
-__attribute__((constructor))
-static void init_global_VGA(void) {
-    kernel_vga = VGA_init((VGA) {0});
-}
+VGA kernel_vga = {
+        .colMax = TT_COLUMNS,
+        .rowMax = TT_ROWS,
+        .color = WHITE_ON_BLUE,
+};
 
 void clearScreen(void) {
     for (unsigned y = kernel_vga.rowMin; y < kernel_vga.rowMax; y++) {

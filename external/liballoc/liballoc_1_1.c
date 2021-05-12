@@ -758,6 +758,7 @@ void *PREFIX(realloc)(void *p, size_t size) {
 
     // If we got here then we're reallocating to a block bigger than us.
     ptr = PREFIX(malloc)(size);                    // We need to allocate new memory
+    if (!ptr) return NULL;
     liballoc_memcpy(ptr, p, real_size);
     PREFIX(free)(p);
 

@@ -40,7 +40,7 @@ const char *exceptions[NUM_EXCEPTIONS] = {
         "Virtualization Exception",
 };
 
-extern void isr_handler(const ISR_Frame regs) {
+void isr_handler(const ISR_Frame regs) {
     static VGA vga = {
             .rowMax = TT_ROWS,
             .colMax = TT_COLUMNS,
@@ -114,7 +114,7 @@ extern void isr_handler(const ISR_Frame regs) {
     while (true);
 }
 
-extern void irq0_handler(void) {
+void irq0_handler(void) {
     static unsigned long counter = 0;
     static VGA vga = {
             .rowMax = 1,
@@ -128,7 +128,7 @@ extern void irq0_handler(void) {
     printf(&vga, "Clock: %lu\r", counter++);
 }
 
-extern void irq1_handler(void) {
+void irq1_handler(void) {
     unsigned char scancode = inb(KBD_DATA_PORT);
     PIC_send_EOI(1);
 
@@ -142,7 +142,7 @@ extern void irq1_handler(void) {
     }
 }
 
-#define BLANK_IRQ(X) extern void irq##X##_handler(void) { PIC_send_EOI(X); }
+#define BLANK_IRQ(X) void irq##X##_handler(void) { PIC_send_EOI(X); }
 
 FOR_EACH(BLANK_IRQ,
          2, 3, 4, 5, 6, 7, 8)

@@ -31,9 +31,13 @@ typedef struct {
 
 PT *pt4;
 
+__attribute((constructor))
+void vmm_init(void) {
+    asm ("mov %0, cr3" : "=r"(pt4));
+}
+
 static PT *allocate_page_table(void) {
     void *table = pmm_allocate_page_table();
-//    log("New PT at %p\n", table);
     kmemset(table, 0, PAGE_SIZE);
     return (PT *) table;
 }
@@ -42,7 +46,7 @@ static inline void flush_tlb(void *addr) {
     asm volatile("invlpg [%0]"::"r"((unsigned long) addr) :"memory");
 }
 
-bool ensure_page_present(void *virtualaddr) {
+static bool ensure_page_present(void *virtualaddr) {
     unsigned int pt4_index = ((unsigned long) virtualaddr >> 39) & 0x1ff;
     unsigned int pt3_index = ((unsigned long) virtualaddr >> 30) & 0x1ff;
     unsigned int pt2_index = ((unsigned long) virtualaddr >> 21) & 0x1ff;
@@ -92,7 +96,6 @@ bool ensure_page_present(void *virtualaddr) {
 
         // Map page to address
         page_table->entries[page_index] = (uint64_t) page | 0x3; // read/write, present
-//        log("[VMM] Mapped virt %p to phys %p\n", virtualaddr, page);
 
         flush_tlb(page);
         any_changed = true;
@@ -102,19 +105,12 @@ bool ensure_page_present(void *virtualaddr) {
     return any_changed;
 }
 
-bool ensure_pages_present(void *vstart, size_t pages) {
+static bool ensure_pages_present(void *vstart, size_t pages) {
     bool any_changed = false;
     for (size_t i = 0; i < pages; i++) {
         any_changed |= ensure_page_present(vstart + i * PAGE_SIZE);
     }
     return any_changed;
-}
-
-__attribute((constructor))
-static void vmm_init(void) {
-    // Get P4 root
-    asm ("mov %0, cr3" : "=r"(pt4));
-    log("[VMM] PT4 root at: %p\n", (void *) pt4);
 }
 
 typedef struct free_block {

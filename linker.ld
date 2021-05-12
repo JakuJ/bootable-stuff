@@ -13,7 +13,7 @@ SECTIONS {
     .text : ALIGN(4K)
     {
         _TEXT_START_ = .;
-        *(.text*)
+        *(.text)
         _TEXT_END_ = .;
     }
     .rodata : ALIGN(4K)

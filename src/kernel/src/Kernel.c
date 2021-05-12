@@ -8,7 +8,7 @@
 #include <liballoc_1_1.h>
 
 // Kernel entry point
-extern void kmain() {
+void kmain() {
     // Initialize resources
     PIC_remap(0x20, 0x28);
     IDT_init();
@@ -24,7 +24,7 @@ extern void kmain() {
     log("Interrupts enabled: %s\n", btoa(are_interrupts_enabled()));
 
     // Test dynamic memory allocation
-    for (int j = 0; j < 2; j++) {
+    for (int j = 0; j < 1; j++) {
         void *mems[2];
         for (int i = 0; i < 2; i++) {
             mems[i] = kmalloc(16 * 0x1000); // 10 MB
