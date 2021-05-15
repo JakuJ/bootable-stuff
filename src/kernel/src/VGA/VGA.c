@@ -3,15 +3,14 @@
 #include <VGA/VGA.h>
 #include <memory/VMM.h>
 #include <VGA/Font.h>
+#include <PortIO.h>
 
+#define TAB_SIZE 4
 #define PIXEL uint32_t
 #define TEXT_COLOR 0x00ffffff
-#define BACKGROUND 0x000000ff
 
 typedef struct {
-    unsigned rowMin;
     unsigned rowMax;
-    unsigned colMin;
     unsigned colMax;
     unsigned cursorX;
     unsigned cursorY;
@@ -43,24 +42,38 @@ void vga_init(void) {
     FRAMEBUFFER = (PIXEL *) (uintptr_t) vbe.physical_buffer;
 
     vga = (VGA) {
-            .colMax = vbe.x_cur_max,
-            .rowMax = vbe.y_cur_max,
+            .colMax = vbe.width / FONT_WIDTH,
+            .rowMax = vbe.height / FONT_HEIGHT,
     };
+}
+
+void vga_info(void) {
+    log("Display info:\n");
+    log("\tDisplay size: %d x %d x %d\n", vbe.width, vbe.height, vbe.bpp);
+    log("\tFramebuffer at %x physical\n", vbe.physical_buffer);
+    log("\tBytes per pixel: %d, per line: %d\n", vbe.bytes_per_pixel, vbe.bytes_per_line);
+    log("\tCursor range: %d x %d\n", vbe.x_cur_max, vbe.y_cur_max);
+    log("\tTeletype range: %d x %d\n", vga.colMax, vga.rowMax);
+    log("\tFont size: %d x %d\n", FONT_WIDTH, FONT_HEIGHT);
+}
+
+static PIXEL lerp(PIXEL x, PIXEL y, float p) {
+    return (PIXEL) ((float) x * (1.0 - p) + (float) y * p);
+}
+
+static PIXEL background(unsigned x __attribute__((unused)), unsigned y __attribute__((unused))) {
+    float p = (float) x / (float) vbe.width;
+    return lerp(0xad, 0x3c, p) << 16 | lerp(0x53, 0x10, p) << 8 | lerp(0x89, 0x53, p);
 }
 
 void clearScreen(void) {
     for (unsigned x = 0; x < vbe.width; x++) {
         for (unsigned y = 0; y < vbe.height; y++) {
-            FRAMEBUFFER[x + y * vbe.width] = BACKGROUND;
+            FRAMEBUFFER[x + y * vbe.width] = background(x, y);
         }
     }
 
     vga.cursorX = vga.cursorY = 0;
-
-    log("Size: %d x %d x %d, FB at %x, BPP: %d, BPL: %d, Cur: %d x %d\n",
-        vbe.width, vbe.height, vbe.bpp, vbe.physical_buffer,
-        vbe.bytes_per_pixel, vbe.bytes_per_line,
-        vbe.x_cur_max, vbe.y_cur_max);
 }
 
 static void scrollUp(void) {
@@ -72,7 +85,8 @@ static void scrollUp(void) {
     // Clear last line
     for (size_t y = 0; y < FONT_HEIGHT; y++) {
         for (size_t x = 0 * FONT_WIDTH; x < vga.colMax * FONT_WIDTH; x++) {
-            FRAMEBUFFER[x + ((vga.rowMax - 1) * FONT_HEIGHT + y) * vbe.width] = BACKGROUND;
+            unsigned py = (vga.rowMax - 1) * FONT_HEIGHT + y;
+            FRAMEBUFFER[x + py * vbe.width] = background(x, py);
         }
     }
 }
@@ -93,18 +107,19 @@ static void ensureCursorInRange(void) {
 }
 
 static inline void render(char character) {
-    for (int x = 0; x < FONT_WIDTH; x++) {
-        for (int y = 0; y < FONT_HEIGHT; y++) {
+    for (unsigned x = 0; x < FONT_WIDTH; x++) {
+        for (unsigned y = 0; y < FONT_HEIGHT; y++) {
             int set = FONT[character - 32][FONT_HEIGHT - y - 1] & 1 << (FONT_WIDTH - x - 1);
-            FRAMEBUFFER[(vga.cursorX * FONT_WIDTH + x) + (vga.cursorY * FONT_HEIGHT + y) * vbe.width] = set
-                                                                                                        ? TEXT_COLOR
-                                                                                                        : BACKGROUND;
+            unsigned px = vga.cursorX * FONT_WIDTH + x;
+            unsigned py = vga.cursorY * FONT_HEIGHT + y;
+            FRAMEBUFFER[px + py * vbe.width] = set ? TEXT_COLOR : background(px, py);
         }
     }
     vga.cursorX++;
 }
 
 static void putChar(char c) {
+    outb(0x3F8, c); // QEMU serial port debug output (COM1)
     switch (c) {
         case '\r':
             vga.cursorX = 0;
@@ -113,6 +128,13 @@ static void putChar(char c) {
             vga.cursorX = 0;
             vga.cursorY++;
             break;
+        case '\t': {
+            int howMany = TAB_SIZE - vga.cursorX % TAB_SIZE;
+            for (int i = 0; i < howMany; i++) {
+                putChar(' ');
+            }
+            break;
+        }
         default:
             render(c);
             break;

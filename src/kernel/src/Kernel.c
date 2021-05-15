@@ -3,8 +3,6 @@
 #include <PIC.h>
 #include <IDT.h>
 #include <Diagnostics.h>
-#include <string.h>
-#include <liballoc_1_1.h>
 #include <memory/PMM.h>
 #include <memory/VMM.h>
 
@@ -23,8 +21,14 @@ void kmain() {
 
     log("Kernel loaded\n\n");
 
-    // Print section info
-    print_sections();
+    vga_info();
+    log("\n");
+    section_info();
+    log("\n");
+    sse_info();
+    log("\n");
+
+    enable_interrupts();
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

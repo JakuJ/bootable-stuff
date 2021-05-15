@@ -48,6 +48,7 @@ bool vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
     unsigned int pt2_index = (virtual >> 21) & 0x1ff;
     unsigned int page_index = (virtual >> 12) & 0x1ff;
 
+    bool interrupts = are_interrupts_enabled();
     disable_interrupts();
     bool anything_changed = false;
 
@@ -97,7 +98,10 @@ bool vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
         flush_tlb((void *) physical);
     }
 
-    enable_interrupts();
+    if (interrupts) {
+        enable_interrupts();
+    }
+
     return anything_changed;
 }
 

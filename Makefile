@@ -75,12 +75,14 @@ $(image_file): $(obj_link_list)
 qemu64: build
 	qemu-system-x86_64 -no-reboot \
 	-cpu qemu64,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4a,+sse4.1,+sse4.2,+xsave \
+	-serial stdio \
 	-drive format=raw,file=$(image_file)
 
 # cannot use SSE, so might as well compile with -Os and UBSAN
 hvf: ubsan
 	qemu-system-x86_64 \
 	-M accel=hvf -cpu host,+xsave \
+	-serial stdio \
 	-drive format=raw,file=$(image_file)
 
 count_sectors: $(image_file)

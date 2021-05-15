@@ -23,5 +23,4 @@ global load_idt
 load_idt:
   extern idt_ptr
   lidt [idt_ptr]
-  sti
   ret
