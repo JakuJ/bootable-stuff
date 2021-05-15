@@ -16,7 +16,6 @@ void print_sections(void) {
 
     log("Sections:\n");
     PRINT_SECTION(BOOT)
-    PRINT_SECTION(GDT)
     PRINT_SECTION(TEXT)
     PRINT_SECTION(RODATA)
     PRINT_SECTION(DATA)
