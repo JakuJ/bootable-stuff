@@ -14,6 +14,7 @@ void kmain() {
 
     // Welcome user
     clearScreen();
+
     log("Kernel loaded\n\n");
 
     // Print section info

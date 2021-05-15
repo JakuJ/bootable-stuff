@@ -3,15 +3,15 @@
 #include <stdint.h>
 #include <VGA/Font.h>
 
-#define SCREEN_WIDTH 320
-#define SCREEN_HEIGHT 200
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define PIXEL uint32_t
 
 #define TT_WIDTH (SCREEN_WIDTH / FONT_WIDTH)
 #define TT_HEIGHT (SCREEN_HEIGHT / FONT_HEIGHT)
 
-#define BLUE 0x1
-#define BLACK 0x0
-#define WHITE 0xf
+#define BLUE 0x000000ff
+#define WHITE 0x00ffffff
 
 typedef struct {
     unsigned rowMin;
@@ -20,7 +20,7 @@ typedef struct {
     unsigned colMax;
     unsigned cursorX;
     unsigned cursorY;
-    uint8_t color;
+    PIXEL color;
 } VGA;
 
 void clearScreen(void);

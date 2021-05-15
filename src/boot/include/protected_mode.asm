@@ -56,7 +56,8 @@ check_long_mode:
 extern PML4T
 extern PDPT
 extern PDT
-extern PT
+extern PT1
+extern PT2
 setup_paging:
   ; Save page hierarchy root (PML4T) to CR3
   mov edi, PML4T
@@ -65,7 +66,8 @@ setup_paging:
   ; Set up tables
   ; PML4T[0] -> PDPT
   ; PDPT[0] -> PDT
-  ; PDT[0] -> PT
+  ; PDT[0] -> PT1
+  ; PDT[1] -> PT2
   mov eax, PDPT
   or eax, 3
   mov dword [PML4T], eax
@@ -74,19 +76,32 @@ setup_paging:
   or eax, 3
   mov dword [PDPT], eax
 
-  mov eax, PT
+  mov eax, PT1
   or eax, 3
   mov dword [PDT], eax
+
+  mov eax, PT2
+  or eax, 3
+  mov dword [PDT + 8], eax
 
   ; Identity map the first 2MB
   mov ebx, 0x00000003          ; Physical address | flags
   mov ecx, 512                 ; Iteration counter
-  mov edi, PT                  ; Pointer to the current PT cell
-  .set_entry:
+  mov edi, PT1                  ; Pointer to the current PT cell
+  .set_entry1:
     mov dword [edi], ebx
     add ebx, 0x1000            ; Move to the next page
     add edi, 8                 ; Move to the next PT cell
-    loop .set_entry
+    loop .set_entry1
+
+  ; Identity map the second 2MB
+  mov ecx, 512                 ; Iteration counter
+  mov edi, PT2                  ; Pointer to the current PT cell
+  .set_entry2:
+    mov dword [edi], ebx
+    add ebx, 0x1000            ; Move to the next page
+    add edi, 8                 ; Move to the next PT cell
+    loop .set_entry2
 
   ; Enable PAE (Physical Address Extension)
   mov eax, cr4                 ; Set the A-register to control register 4.

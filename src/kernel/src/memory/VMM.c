@@ -17,7 +17,7 @@
 #define PRESENT_MASK            0x1
 
 // Kernel heap starts at 2MB virtual
-#define HEAP_START              0x200000
+#define HEAP_START              0x400000
 
 // 128MB virtual address space for now (-2 MB linearly mapped)
 // TODO: Unlimited memory with swapping

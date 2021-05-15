@@ -1,4 +1,4 @@
-section .data
+section .gdt
 
 GDT32:                  ; Global Descriptor Table (32-bit)
   .Null: equ $ - GDT64  ; The null descriptor

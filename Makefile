@@ -27,8 +27,9 @@ libc_objects = $(patsubst src/libc/src/%.c, build/libc/%.o, $(libc_c_sources))
 kernel_headers = $(shell find src/kernel/include -name *.h)
 libc_headers = $(shell find src/libc/include -name *.h)
 
-bootloader_sources = $(shell find src/boot -maxdepth 1 -name *.asm)
-bootloader_objs = $(patsubst src/boot/%.asm, build/boot/%.o, $(bootloader_sources))
+boot_includes = $(shell find src/boot/include -name *.asm)
+bootloader_sources = $(shell find src/boot/src -name *.asm)
+bootloader_objs = $(patsubst src/boot/src/%.asm, build/boot/%.o, $(bootloader_sources))
 
 # Global constructor support
 crti_obj = build/boot/crti.o
@@ -50,9 +51,9 @@ ubsan: CFLAGS += -Os -fsanitize=undefined
 ubsan: build
 
 # Object file targets
-$(bootloader_objs) $(crti_obj) $(crtn_obj): build/boot/%.o : src/boot/%.asm
+$(bootloader_objs) $(crti_obj) $(crtn_obj) : build/boot/%.o : src/boot/src/%.asm $(boot_includes)
 	mkdir -p $(dir $@) && \
-	$(AS) -o $@ $^
+	$(AS) -o $@ $<
 
 $(kernel_asm_objects): build/kernel/%.o : src/kernel/assembly/%.asm
 	mkdir -p $(dir $@) && \

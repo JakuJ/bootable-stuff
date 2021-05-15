@@ -4,8 +4,8 @@
 #include <memory.h>
 
 // TODO: Respect the memory map
-#define RESERVED_START  0x100000
-#define MEM_START       0x200000
+#define RESERVED_START  0x300000
+#define MEM_START       0x400000
 #define PAGE_SIZE       4096
 
 // Bootstrap the page manager with 128MB of RAM

@@ -44,7 +44,7 @@ void isr_handler(const ISR_Frame regs) {
     static VGA vga = {
             .rowMax = TT_HEIGHT,
             .colMax = TT_WIDTH,
-            .color = BLACK,
+            .color = WHITE,
     };
 
     // Print exception type

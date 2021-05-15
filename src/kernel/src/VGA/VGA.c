@@ -1,7 +1,17 @@
 #include <VGA/VGA.h>
 #include <string.h>
 
-#define FRAMEBUFFER ((unsigned char *) 0xa0000)
+typedef struct {
+    uint16_t width, height;
+    uint8_t bpp;
+    uint32_t physical_buffer;
+    uint32_t bytes_per_pixel;
+    uint16_t bytes_per_line;
+    uint16_t x_cur_max, y_cur_max;
+} __attribute__((packed)) vbe_screen_info;
+
+#define FRAMEBUFFER ((PIXEL *) 0xa0000)
+#define BACKGROUND BLUE
 
 VGA kernel_vga = {
         .colMax = TT_WIDTH,
@@ -9,14 +19,27 @@ VGA kernel_vga = {
         .color = WHITE,
 };
 
+vbe_screen_info *vbe;
+
+__attribute__((constructor))
+void setupVGA(void) {
+    extern uintptr_t vbe_screen;
+    vbe = (vbe_screen_info *) &vbe_screen;
+}
+
 void clearScreen(void) {
     for (unsigned x = 0; x < SCREEN_WIDTH; x++) {
         for (unsigned y = 0; y < SCREEN_HEIGHT; y++) {
-            FRAMEBUFFER[x + y * SCREEN_WIDTH] = BLUE;
+            FRAMEBUFFER[x + y * SCREEN_WIDTH] = BACKGROUND;
         }
     }
     kernel_vga.cursorX = kernel_vga.colMin;
     kernel_vga.cursorY = kernel_vga.rowMin;
+
+    log("Size: %d x %d x %d, FB at %x, BPP: %d, BPL: %d, Cur: %d x %d\n",
+        vbe->width, vbe->height, vbe->bpp, vbe->physical_buffer,
+        vbe->bytes_per_pixel, vbe->bytes_per_line,
+        vbe->x_cur_max, vbe->y_cur_max);
 }
 
 static void scrollUp(VGA *vga) {
@@ -28,7 +51,7 @@ static void scrollUp(VGA *vga) {
     // Clear last line
     for (size_t y = 0; y < FONT_HEIGHT; y++) {
         for (size_t x = vga->colMin * FONT_WIDTH; x < vga->colMax * FONT_WIDTH; x++) {
-            FRAMEBUFFER[x + ((vga->rowMax - 1) * FONT_HEIGHT + y) * SCREEN_WIDTH] = BLUE;
+            FRAMEBUFFER[x + ((vga->rowMax - 1) * FONT_HEIGHT + y) * SCREEN_WIDTH] = BACKGROUND;
         }
     }
 }
@@ -52,7 +75,7 @@ static inline void render(VGA *vga, char character) {
     for (int x = 0; x < FONT_WIDTH; x++) {
         for (int y = 0; y < FONT_HEIGHT; y++) {
             int set = FONT[character - 32][FONT_HEIGHT - y - 1] & 1 << (FONT_WIDTH - x - 1);
-            uint8_t clr = set ? vga->color : BLUE;
+            PIXEL clr = set ? vga->color : BACKGROUND;
             FRAMEBUFFER[(vga->cursorX * FONT_WIDTH + x) + (vga->cursorY * FONT_HEIGHT + y) * SCREEN_WIDTH] = clr;
         }
     }

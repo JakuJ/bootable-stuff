@@ -1,7 +1,8 @@
-; Set VGA mode
-mov ah, 0
-mov al, 0x13
-int 0x10
+; Set VBE mode
+mov ax, 800d
+mov bx, 600d
+mov cl, 32d
+call vbe_set_mode
 
 ; Disable interrupts
 cli
@@ -36,3 +37,5 @@ mov ss, ax
 
 ; Enter 32-bit protected mode
 jmp GDT32_Code:protected_mode
+
+%include "src/boot/include/vesa.asm"
