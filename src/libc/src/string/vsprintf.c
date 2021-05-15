@@ -30,7 +30,7 @@ void vsprintf(char *buffer, char const *fmt, va_list arg) {
                             break;
                         }
                         case 'x': {
-                            buffer = itoa(va_arg(arg, long), buffer, 16);
+                            buffer = itoa(va_arg(arg, unsigned long), buffer, 16);
                             break;
                         }
                     }
@@ -49,7 +49,7 @@ void vsprintf(char *buffer, char const *fmt, va_list arg) {
                     break;
                 }
                 case 'x': {
-                    buffer = itoa(va_arg(arg, int), buffer, 16);
+                    buffer = itoa(va_arg(arg, unsigned int), buffer, 16);
                     break;
                 }
                 case 'f': {

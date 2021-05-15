@@ -1,5 +1,9 @@
 #include <VGA/VGA.h>
+#include <memory/VMM.h>
 #include <string.h>
+
+#define PAGE_SIZE 0x1000
+#define BACKGROUND BLUE
 
 typedef struct {
     uint16_t width, height;
@@ -10,22 +14,30 @@ typedef struct {
     uint16_t x_cur_max, y_cur_max;
 } __attribute__((packed)) vbe_screen_info;
 
-#define FRAMEBUFFER ((PIXEL *) 0xa0000)
-#define BACKGROUND BLUE
+vbe_screen_info *vbe;
+PIXEL *FRAMEBUFFER;
+
+void vga_init(void) {
+    extern uintptr_t vbe_screen;
+    vbe = (vbe_screen_info *) &vbe_screen;
+
+    size_t fb_size = vbe->height * vbe->bytes_per_line;
+    size_t fb_pages = fb_size / PAGE_SIZE;
+
+    uintptr_t page = vbe->physical_buffer;
+
+    for (size_t i = 0; i <= fb_pages; i++) {
+        vmm_map_memory(page + i * PAGE_SIZE, page + i * PAGE_SIZE);
+    }
+
+    FRAMEBUFFER = (PIXEL *) (uintptr_t) vbe->physical_buffer;
+}
 
 VGA kernel_vga = {
         .colMax = TT_WIDTH,
         .rowMax = TT_HEIGHT,
         .color = WHITE,
 };
-
-vbe_screen_info *vbe;
-
-__attribute__((constructor))
-void setupVGA(void) {
-    extern uintptr_t vbe_screen;
-    vbe = (vbe_screen_info *) &vbe_screen;
-}
 
 void clearScreen(void) {
     for (unsigned x = 0; x < SCREEN_WIDTH; x++) {

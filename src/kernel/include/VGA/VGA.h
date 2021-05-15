@@ -23,6 +23,8 @@ typedef struct {
     PIXEL color;
 } VGA;
 
+void vga_init(void);
+
 void clearScreen(void);
 
 void putChar(VGA *, char) __attribute__((nonnull));

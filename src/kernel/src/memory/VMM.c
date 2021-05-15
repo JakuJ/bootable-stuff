@@ -1,7 +1,6 @@
 #include <memory/VMM.h>
 #include <memory/PMM.h>
 #include <VGA/VGA.h>
-#include <stdint.h>
 #include <liballoc_1_1.h>
 #include <Interrupts.h>
 #include <memory.h>
@@ -31,7 +30,6 @@ typedef struct {
 
 PT *pt4;
 
-__attribute((constructor))
 void vmm_init(void) {
     asm ("mov %0, cr3" : "=r"(pt4));
 }
@@ -44,6 +42,55 @@ static PT *allocate_page_table(void) {
 
 static inline void flush_tlb(void *addr) {
     asm volatile("invlpg [%0]"::"r"((unsigned long) addr) :"memory");
+}
+
+void vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
+    unsigned int pt4_index = (virtual >> 39) & 0x1ff;
+    unsigned int pt3_index = (virtual >> 30) & 0x1ff;
+    unsigned int pt2_index = (virtual >> 21) & 0x1ff;
+    unsigned int page_index = (virtual >> 12) & 0x1ff;
+
+    disable_interrupts();
+
+    // Check P4 entry
+    if (!(pt4->entries[pt4_index] & PRESENT_MASK)) {
+        // Create new P3 table
+        PT *pt3 = allocate_page_table();
+
+        // Point P4 entry to that P3 table
+        pt4->entries[pt4_index] = (uint64_t) pt3 | 0x3; // read/write, present
+    }
+
+    // Check P3 entry
+    PT *pt3 = (PT *) (pt4->entries[pt4_index] & ADDRESS_MASK);
+    if (!(pt3->entries[pt3_index] & PRESENT_MASK)) {
+        // Create new P2 table
+        PT *pt2 = allocate_page_table();
+
+        // Point P3 entry to that P2 table
+        pt3->entries[pt3_index] = (uint64_t) pt2 | 0x3; // read/write, present
+    }
+
+    // Check P2 entry
+    PT *pt2 = (PT *) (pt3->entries[pt3_index] & ADDRESS_MASK);
+    if (!(pt2->entries[pt2_index] & PRESENT_MASK)) {
+        // Create new P1 table
+        PT *page_table = allocate_page_table();
+
+        // Point P2 entry to that P1 table
+        pt2->entries[pt2_index] = (uint64_t) page_table | 0x3; // read/write, present
+    }
+
+    // Check P1 (page table) entry
+    PT *page_table = (PT *) (pt2->entries[pt2_index] & ADDRESS_MASK);
+    if (!(page_table->entries[page_index] & PRESENT_MASK)) {
+        // Map page to address
+        page_table->entries[page_index] = physical | 0x3; // read/write, present
+
+        flush_tlb((void *) physical);
+    }
+
+    enable_interrupts();
 }
 
 static bool ensure_page_present(void *virtualaddr) {

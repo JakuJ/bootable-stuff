@@ -5,10 +5,16 @@
 #include <Diagnostics.h>
 #include <string.h>
 #include <liballoc_1_1.h>
+#include <memory/PMM.h>
+#include <memory/VMM.h>
 
 // Kernel entry point
 void kmain() {
     // Initialize resources
+    pmm_init();
+    vmm_init();
+    vga_init();
+
     PIC_remap(0x20, 0x28);
     IDT_init();
 

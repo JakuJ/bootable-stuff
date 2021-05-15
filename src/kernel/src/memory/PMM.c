@@ -13,7 +13,6 @@
 
 uint64_t bitmap[PAGES];
 
-__attribute__((constructor))
 void pmm_init(void) {
     kmemset(bitmap, 0xff, sizeof(bitmap));
 }
