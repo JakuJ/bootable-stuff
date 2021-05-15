@@ -4,7 +4,7 @@
 
 This repository contains a custom bootloader and an x86_64 kernel, both written from scratch.
 
-![current state](docs/current.gif)
+![current state](docs/current.png)
 
 # Running
 
@@ -33,6 +33,8 @@ to build the image and boot it in QEMU.
     - [x] Enabling SSE, AVX*
 - VGA controller
     - [x] Printing text to the screen
+    - [x] Setting VESA modes automatically
+    - [ ] Graphics API
 - Interrupts
     - [x] IDT setup with PIC remapping
     - [x] Event-based system for handing keyboard interrupts

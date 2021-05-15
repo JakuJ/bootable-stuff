@@ -1,38 +1,34 @@
-#include <VGA.h>
+#include <VGA/VGA.h>
 #include <Interrupts.h>
 #include <PIC.h>
 #include <IDT.h>
-#include <KbController.h>
 #include <Diagnostics.h>
-#include <string.h>
-#include <liballoc_1_1.h>
+#include <memory/PMM.h>
+#include <memory/VMM.h>
 
 // Kernel entry point
 void kmain() {
     // Initialize resources
+    pmm_init();
+    vmm_init();
+    vga_init();
+
     PIC_remap(0x20, 0x28);
     IDT_init();
 
     // Welcome user
     clearScreen();
+
     log("Kernel loaded\n\n");
 
-    // Print section info
-    print_sections();
+    vga_info();
+    log("\n");
+    section_info();
+    log("\n");
+    sse_info();
     log("\n");
 
-    log("Interrupts enabled: %s\n", btoa(are_interrupts_enabled()));
-
-    // Test dynamic memory allocation
-    for (int j = 0; j < 1; j++) {
-        void *mems[2];
-        for (int i = 0; i < 2; i++) {
-            mems[i] = kmalloc(16 * 0x1000); // 10 MB
-        }
-        for (int i = 0; i < 2; i++) {
-            kfree(mems[i]);
-        }
-    }
+    enable_interrupts();
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

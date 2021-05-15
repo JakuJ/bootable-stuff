@@ -1,7 +1,7 @@
 #include <PIC.h>
 #include <PortIO.h>
 #include <KbController.h>
-#include <VGA.h>
+#include <VGA/VGA.h>
 #include <Interrupts.h>
 #include <macros.h>
 
@@ -41,17 +41,11 @@ const char *exceptions[NUM_EXCEPTIONS] = {
 };
 
 void isr_handler(const ISR_Frame regs) {
-    static VGA vga = {
-            .rowMax = TT_ROWS,
-            .colMax = TT_COLUMNS,
-            .color = WHITE_ON_BLACK,
-    };
-
     // Print exception type
     if (regs.int_no < NUM_EXCEPTIONS) {
-        printf(&vga, "Exception: %s\n", exceptions[regs.int_no]);
+        log("Exception: %s\n", exceptions[regs.int_no]);
     } else {
-        printf(&vga, "Unknown exception: %lu\n", regs.int_no);
+        log("Unknown exception: %lu\n", regs.int_no);
     }
 
     // Special handing for some exceptions
@@ -59,11 +53,11 @@ void isr_handler(const ISR_Frame regs) {
         case 13:
             if (regs.err_code != 0) {
                 if (regs.err_code & 1) {
-                    printf(&vga, "Exception of external origin\n");
+                    log("Exception of external origin\n");
                 } else {
                     const char *sources[] = {"GDT", "IDT", "LDT", "IDT"};
-                    printf(&vga, "Source: %s\n", sources[(regs.err_code >> 1) & 0x3]);
-                    printf(&vga, "Selector index: %lu\n", (regs.err_code >> 3) & 0x1ffff);
+                    log("Source: %s\n", sources[(regs.err_code >> 1) & 0x3]);
+                    log("Selector index: %lu\n", (regs.err_code >> 3) & 0x1ffff);
                 }
             }
             break;
@@ -72,16 +66,16 @@ void isr_handler(const ISR_Frame regs) {
 
             // Faulting address is stored in CR2
             asm volatile ("mov %0, cr2" : "=r"(address));
-            printf(&vga, "Address: %lx (%lu)\n", address, address);
+            log("Address: %lx (%lu)\n", address, address);
 
-            printf(&vga, regs.err_code & 1 ? "Page-protection violation\n" : "Non-present page\n");
-            printf(&vga, regs.err_code & 2 ? "Write access\n" : "Read access\n");
-            printf(&vga, "Caused by process in ring %d\n", (regs.err_code & 4) ? 3 : 0);
+            log(regs.err_code & 1 ? "Page-protection violation\n" : "Non-present page\n");
+            log(regs.err_code & 2 ? "Write access\n" : "Read access\n");
+            log("Caused by process in ring %d\n", (regs.err_code & 4) ? 3 : 0);
             if (regs.err_code & 8) {
-                printf(&vga, "One or more page directory entries contain reserved bits which are set to 1\n");
+                log("One or more page directory entries contain reserved bits which are set to 1\n");
             }
             if (regs.err_code & 16) {
-                printf(&vga, "Caused by an instruction fetch\n");
+                log("Caused by an instruction fetch\n");
             }
 
             // Trace paging structures
@@ -92,40 +86,32 @@ void isr_handler(const ISR_Frame regs) {
 
             unsigned long *p4, *p3, *p2, *p1;
             asm ("mov %0, cr3" : "=r"(p4));
-            printf(&vga, "PML4T at: %p\n", (void *) p4);
-            printf(&vga, "PML4T entry %u : %lx\n", pt4_index, p4[pt4_index]);
+            log("PML4T at: %p\n", (void *) p4);
+            log("PML4T entry %u : %lx\n", pt4_index, p4[pt4_index]);
             p3 = (unsigned long *) (p4[pt4_index] & ~0xfff);
-            printf(&vga, "PDPT entry %u: %lx\n", pt3_index, p3[pt3_index]);
+            log("PDPT entry %u: %lx\n", pt3_index, p3[pt3_index]);
             p2 = (unsigned long *) (p3[pt3_index] & ~0xfff);
-            printf(&vga, "PDT entry %u: %lx\n", pt2_index, p2[pt2_index]);
+            log("PDT entry %u: %lx\n", pt2_index, p2[pt2_index]);
             p1 = (unsigned long *) (p2[pt2_index] & ~0xfff);
-            printf(&vga, "PT entry %u: %lx\n", page_index, p1[page_index] & 0xffffffffffffUL);
+            log("PT entry %u: %lx\n", page_index, p1[page_index] & 0xffffffffffffUL);
             break;
         }
     }
 
     // Register dump
-    printf(&vga, "Registers:\nA: %lx | B: %lx | C: %lx | D: %lx\n", regs.ax, regs.bx, regs.cx, regs.dx);
-    printf(&vga, "DI: %lx | SI: %lx\nIP: %lx\nBP: %lx | SP: %lx\n", regs.di, regs.si, regs.ip, regs.bp, regs.sp);
-    printf(&vga, "CS: %lx | DS: %lx | SS: %lx\n", regs.cs, regs.ds, regs.ss);
-    printf(&vga, "R8: %lx | R9: %lx | R10: %lx | R11: %lx\n", regs.r8, regs.r9, regs.r10, regs.r11);
-    printf(&vga, "R12: %lx | R13: %lx | R14: %lx | R15: %lx\n", regs.r12, regs.r13, regs.r14, regs.r15);
+    log("Registers:\nA: %lx | B: %lx | C: %lx | D: %lx\n", regs.ax, regs.bx, regs.cx, regs.dx);
+    log("DI: %lx | SI: %lx\nIP: %lx\nBP: %lx | SP: %lx\n", regs.di, regs.si, regs.ip, regs.bp, regs.sp);
+    log("CS: %lx | DS: %lx | SS: %lx\n", regs.cs, regs.ds, regs.ss);
+    log("R8: %lx | R9: %lx | R10: %lx | R11: %lx\n", regs.r8, regs.r9, regs.r10, regs.r11);
+    log("R12: %lx | R13: %lx | R14: %lx | R15: %lx\n", regs.r12, regs.r13, regs.r14, regs.r15);
 
     while (true);
 }
 
 void irq0_handler(void) {
     static unsigned long counter = 0;
-    static VGA vga = {
-            .rowMax = 1,
-            .colMin = 67,
-            .cursorX = 67,
-            .colMax = TT_COLUMNS,
-            .color = WHITE_ON_BLUE,
-    };
-
     PIC_send_EOI(0);
-    printf(&vga, "Clock: %lu\r", counter++);
+    log("Clock: %lu\r", counter++);
 }
 
 void irq1_handler(void) {

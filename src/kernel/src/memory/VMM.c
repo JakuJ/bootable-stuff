@@ -1,7 +1,6 @@
 #include <memory/VMM.h>
 #include <memory/PMM.h>
-#include <VGA.h>
-#include <stdint.h>
+#include <VGA/VGA.h>
 #include <liballoc_1_1.h>
 #include <Interrupts.h>
 #include <memory.h>
@@ -23,15 +22,12 @@
 // TODO: Unlimited memory with swapping
 #define MAX_HEAP_SIZE           (256 * 126)
 
-#define PAGE_SIZE               4096
-
 typedef struct {
     uint64_t entries[512];
 } PT;
 
 PT *pt4;
 
-__attribute((constructor))
 void vmm_init(void) {
     asm ("mov %0, cr3" : "=r"(pt4));
 }
@@ -46,15 +42,15 @@ static inline void flush_tlb(void *addr) {
     asm volatile("invlpg [%0]"::"r"((unsigned long) addr) :"memory");
 }
 
-static bool ensure_page_present(void *virtualaddr) {
-    unsigned int pt4_index = ((unsigned long) virtualaddr >> 39) & 0x1ff;
-    unsigned int pt3_index = ((unsigned long) virtualaddr >> 30) & 0x1ff;
-    unsigned int pt2_index = ((unsigned long) virtualaddr >> 21) & 0x1ff;
-    unsigned int page_index = ((unsigned long) virtualaddr >> 12) & 0x1ff;
+bool vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
+    unsigned int pt4_index = (virtual >> 39) & 0x1ff;
+    unsigned int pt3_index = (virtual >> 30) & 0x1ff;
+    unsigned int pt2_index = (virtual >> 21) & 0x1ff;
+    unsigned int page_index = (virtual >> 12) & 0x1ff;
 
-    bool any_changed = false;
-
+    bool interrupts = are_interrupts_enabled();
     disable_interrupts();
+    bool anything_changed = false;
 
     // Check P4 entry
     if (!(pt4->entries[pt4_index] & PRESENT_MASK)) {
@@ -63,7 +59,7 @@ static bool ensure_page_present(void *virtualaddr) {
 
         // Point P4 entry to that P3 table
         pt4->entries[pt4_index] = (uint64_t) pt3 | 0x3; // read/write, present
-        any_changed = true;
+        anything_changed = true;
     }
 
     // Check P3 entry
@@ -74,7 +70,7 @@ static bool ensure_page_present(void *virtualaddr) {
 
         // Point P3 entry to that P2 table
         pt3->entries[pt3_index] = (uint64_t) pt2 | 0x3; // read/write, present
-        any_changed = true;
+        anything_changed = true;
     }
 
     // Check P2 entry
@@ -85,32 +81,36 @@ static bool ensure_page_present(void *virtualaddr) {
 
         // Point P2 entry to that P1 table
         pt2->entries[pt2_index] = (uint64_t) page_table | 0x3; // read/write, present
-        any_changed = true;
+        anything_changed = true;
     }
 
     // Check P1 (page table) entry
     PT *page_table = (PT *) (pt2->entries[pt2_index] & ADDRESS_MASK);
     if (!(page_table->entries[page_index] & PRESENT_MASK)) {
-        // Allocate new physical page
-        void *page = pmm_allocate_page();
-
         // Map page to address
-        page_table->entries[page_index] = (uint64_t) page | 0x3; // read/write, present
+        if (!physical) {
+            physical = (uintptr_t) pmm_allocate_page();
+        }
 
-        flush_tlb(page);
-        any_changed = true;
+        page_table->entries[page_index] = physical | 0x3; // read/write, present
+        anything_changed = true;
+
+        flush_tlb((void *) physical);
     }
 
-    enable_interrupts();
-    return any_changed;
+    if (interrupts) {
+        enable_interrupts();
+    }
+
+    return anything_changed;
 }
 
 static bool ensure_pages_present(void *vstart, size_t pages) {
-    bool any_changed = false;
+    bool anything_changed = false;
     for (size_t i = 0; i < pages; i++) {
-        any_changed |= ensure_page_present(vstart + i * PAGE_SIZE);
+        anything_changed |= vmm_map_memory(0, (uintptr_t) vstart + i * PAGE_SIZE);
     }
-    return any_changed;
+    return anything_changed;
 }
 
 typedef struct free_block {

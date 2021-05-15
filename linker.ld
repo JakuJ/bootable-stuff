@@ -5,10 +5,8 @@ SECTIONS {
     .boot : {
         _BOOT_START_ = .;
         *(.boot)
-        _BOOT_END_ = .;
-        _GDT_START_ = .;
         *(.gdt)
-        _GDT_END_ = .;
+        _BOOT_END_ = .;
     }
     .text : ALIGN(4K)
     {

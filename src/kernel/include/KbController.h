@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include <VGA.h>
+#include <VGA/VGA.h>
 
 #define MAX_HANDLERS 16
 #define MAX_SCANCODES 88

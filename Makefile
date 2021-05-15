@@ -4,9 +4,11 @@ CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
 
 # Flags
-CFLAGS = -std=gnu11 -masm=intel
-CFLAGS += -O3 -Wall -Wextra -pedantic -Wno-pointer-arith -fanalyzer
-CFLAGS += -ffreestanding -mno-red-zone -fno-asynchronous-unwind-tables
+CFLAGS = -std=gnu18 -masm=intel
+CFLAGS += -O3 -Wall -Wextra -Wpedantic -Wstrict-aliasing -fanalyzer
+CFLAGS += -Wno-pointer-arith
+CFLAGS += -nostdlib -ffreestanding -fno-pie -fno-stack-protector
+CFLAGS += -mno-red-zone -fno-asynchronous-unwind-tables
 CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/libc/include
 
@@ -25,8 +27,9 @@ libc_objects = $(patsubst src/libc/src/%.c, build/libc/%.o, $(libc_c_sources))
 kernel_headers = $(shell find src/kernel/include -name *.h)
 libc_headers = $(shell find src/libc/include -name *.h)
 
-bootloader_sources = $(shell find src/boot -maxdepth 1 -name *.asm)
-bootloader_objs = $(patsubst src/boot/%.asm, build/boot/%.o, $(bootloader_sources))
+boot_includes = $(shell find src/boot/include -name *.asm)
+bootloader_sources = $(shell find src/boot/src -name *.asm)
+bootloader_objs = $(patsubst src/boot/src/%.asm, build/boot/%.o, $(bootloader_sources))
 
 # Global constructor support
 crti_obj = build/boot/crti.o
@@ -48,9 +51,9 @@ ubsan: CFLAGS += -Os -fsanitize=undefined
 ubsan: build
 
 # Object file targets
-$(bootloader_objs) $(crti_obj) $(crtn_obj): build/boot/%.o : src/boot/%.asm
+$(bootloader_objs) $(crti_obj) $(crtn_obj) : build/boot/%.o : src/boot/src/%.asm $(boot_includes)
 	mkdir -p $(dir $@) && \
-	$(AS) -o $@ $^
+	$(AS) -o $@ $<
 
 $(kernel_asm_objects): build/kernel/%.o : src/kernel/assembly/%.asm
 	mkdir -p $(dir $@) && \
@@ -72,12 +75,14 @@ $(image_file): $(obj_link_list)
 qemu64: build
 	qemu-system-x86_64 -no-reboot \
 	-cpu qemu64,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4a,+sse4.1,+sse4.2,+xsave \
+	-serial stdio \
 	-drive format=raw,file=$(image_file)
 
 # cannot use SSE, so might as well compile with -Os and UBSAN
 hvf: ubsan
 	qemu-system-x86_64 \
 	-M accel=hvf -cpu host,+xsave \
+	-serial stdio \
 	-drive format=raw,file=$(image_file)
 
 count_sectors: $(image_file)

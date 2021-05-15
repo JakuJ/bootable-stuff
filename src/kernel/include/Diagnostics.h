@@ -1,5 +1,5 @@
 #pragma once
 
-void print_sections(void);
+void section_info(void);
 
-void print_sse(void);
+void sse_info(void);
