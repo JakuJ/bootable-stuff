@@ -10,27 +10,27 @@ vbe_set_mode:
 	mov [.width], ax
 	mov [.height], bx
 	mov [.bpp], cl
- 
+
 	sti
- 
+
 	push es					      ; some VESA BIOSes destroy ES, or so I read
 	mov ax, 0x4F00				; get VBE BIOS info
 	mov di, vbe_info_block
 	int 0x10
 	pop es
- 
+
 	cmp ax, 0x4F				  ; BIOS doesn't support VBE?
 	jne .error
- 
+
 	mov ax, word[vbe_info_block.video_modes]
 	mov [.offset], ax
 	mov ax, word[vbe_info_block.video_modes+2]
 	mov [.segment], ax
- 
+
 	mov ax, [.segment]
 	mov fs, ax
 	mov si, [.offset]
- 
+
 .find_mode:
 	mov dx, [fs:si]
 	add si, 2
@@ -38,32 +38,32 @@ vbe_set_mode:
 	mov [.mode], dx
 	mov ax, 0
 	mov fs, ax
- 
+
 	cmp dword [.mode], 0xFFFF			; end of list?
 	je .error
- 
+
 	push es
 	mov ax, 0x4F01				; get VBE mode info
 	mov cx, [.mode]
 	mov di, mode_info_block
 	int 0x10
 	pop es
- 
+
 	cmp ax, 0x4F
 	jne .error
- 
+
 	mov ax, [.width]
 	cmp ax, [mode_info_block.width]
 	jne .next_mode
- 
+
 	mov ax, [.height]
 	cmp ax, [mode_info_block.height]
 	jne .next_mode
- 
+
 	mov al, [.bpp]
 	cmp al, [mode_info_block.bpp]
 	jne .next_mode
- 
+
 	; If we make it here, we've found the correct mode!
 	mov ax, [.width]
 	mov word[vbe_screen.width], ax
@@ -171,7 +171,8 @@ mode_info_block:
   .reserved1:               times 206 db 0
 
 
-global vbe_screen
+global vbe
+vbe:
 vbe_screen:
   .width:				      dw 0
   .height:				    dw 0
