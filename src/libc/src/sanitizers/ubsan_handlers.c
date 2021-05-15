@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <VGA.h>
+#include <VGA/VGA.h>
 
 typedef struct {
     const char *filename;

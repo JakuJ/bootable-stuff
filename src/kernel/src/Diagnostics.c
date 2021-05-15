@@ -1,6 +1,6 @@
 #include <Diagnostics.h>
 #include <string.h>
-#include <VGA.h>
+#include <VGA/VGA.h>
 
 extern int query_cpu(unsigned int page, int reg_no, int bit);
 

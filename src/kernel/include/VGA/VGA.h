@@ -1,10 +1,17 @@
 #pragma once
 
-#define TT_ROWS 25
-#define TT_COLUMNS 80
+#include <stdint.h>
+#include <VGA/Font.h>
 
-#define WHITE_ON_BLUE 0x1f00
-#define WHITE_ON_BLACK 0x0f00
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 200
+
+#define TT_WIDTH (SCREEN_WIDTH / FONT_WIDTH)
+#define TT_HEIGHT (SCREEN_HEIGHT / FONT_HEIGHT)
+
+#define BLUE 0x1
+#define BLACK 0x0
+#define WHITE 0xf
 
 typedef struct {
     unsigned rowMin;
@@ -13,7 +20,7 @@ typedef struct {
     unsigned colMax;
     unsigned cursorX;
     unsigned cursorY;
-    short color;
+    uint8_t color;
 } VGA;
 
 void clearScreen(void);

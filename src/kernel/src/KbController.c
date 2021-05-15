@@ -9,7 +9,7 @@ char translationTable[] = {0, 0,
 Handler pressHandlers[MAX_HANDLERS];
 Handler releaseHandlers[MAX_HANDLERS];
 
-char scanCodeToChar(unsigned char scancode) {
+static char scanCodeToChar(unsigned char scancode) {
     if (scancode < MAX_SCANCODES) {
         return translationTable[scancode];
     }

@@ -1,6 +1,6 @@
 #include <memory/VMM.h>
 #include <memory/PMM.h>
-#include <VGA.h>
+#include <VGA/VGA.h>
 #include <stdint.h>
 #include <liballoc_1_1.h>
 #include <Interrupts.h>

@@ -1,7 +1,7 @@
 #include <PIC.h>
 #include <PortIO.h>
 #include <KbController.h>
-#include <VGA.h>
+#include <VGA/VGA.h>
 #include <Interrupts.h>
 #include <macros.h>
 
@@ -42,9 +42,9 @@ const char *exceptions[NUM_EXCEPTIONS] = {
 
 void isr_handler(const ISR_Frame regs) {
     static VGA vga = {
-            .rowMax = TT_ROWS,
-            .colMax = TT_COLUMNS,
-            .color = WHITE_ON_BLACK,
+            .rowMax = TT_HEIGHT,
+            .colMax = TT_WIDTH,
+            .color = BLACK,
     };
 
     // Print exception type
@@ -118,10 +118,10 @@ void irq0_handler(void) {
     static unsigned long counter = 0;
     static VGA vga = {
             .rowMax = 1,
-            .colMin = 67,
-            .cursorX = 67,
-            .colMax = TT_COLUMNS,
-            .color = WHITE_ON_BLUE,
+            .colMin = TT_WIDTH - 13,
+            .cursorX = TT_WIDTH - 13,
+            .colMax = TT_WIDTH,
+            .color = WHITE,
     };
 
     PIC_send_EOI(0);

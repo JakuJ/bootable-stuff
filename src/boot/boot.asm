@@ -25,6 +25,11 @@ mov cl, 2       ; sector         = 2
 mov ah, 2       ; ah = 2: read from drive
 int 0x13   		  ; Sets: ah = status, al = amount read
 
+; Set VGA mode
+mov ah, 0
+mov al, 0x13
+int 0x10
+
 ; ENTER 32-bit PROTECTED MODE
 
 ; Disable interrupts

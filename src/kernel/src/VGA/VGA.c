@@ -1,18 +1,18 @@
-#include <VGA.h>
+#include <VGA/VGA.h>
 #include <string.h>
 
-#define FRAMEBUFFER ((short *) 0xb8000)
+#define FRAMEBUFFER ((unsigned char *) 0xa0000)
 
 VGA kernel_vga = {
-        .colMax = TT_COLUMNS,
-        .rowMax = TT_ROWS,
-        .color = WHITE_ON_BLUE,
+        .colMax = TT_WIDTH,
+        .rowMax = TT_HEIGHT,
+        .color = WHITE,
 };
 
 void clearScreen(void) {
-    for (unsigned y = kernel_vga.rowMin; y < kernel_vga.rowMax; y++) {
-        for (unsigned x = kernel_vga.colMin; x < kernel_vga.colMax; x++) {
-            putChar(&kernel_vga, ' ');
+    for (unsigned x = 0; x < SCREEN_WIDTH; x++) {
+        for (unsigned y = 0; y < SCREEN_HEIGHT; y++) {
+            FRAMEBUFFER[x + y * SCREEN_WIDTH] = BLUE;
         }
     }
     kernel_vga.cursorX = kernel_vga.colMin;
@@ -20,14 +20,16 @@ void clearScreen(void) {
 }
 
 static void scrollUp(VGA *vga) {
-    for (size_t y = vga->rowMin; y < vga->rowMax - 1; y++) {
-        for (size_t x = vga->colMin; x < vga->colMax; x++) {
-            FRAMEBUFFER[x + y * 80] = FRAMEBUFFER[x + (y + 1) * 80];
+    for (size_t y = vga->rowMin * FONT_HEIGHT; y < (vga->rowMax - 1) * FONT_HEIGHT; y++) {
+        for (size_t x = vga->colMin * FONT_WIDTH; x < vga->colMax * FONT_WIDTH; x++) {
+            FRAMEBUFFER[x + y * SCREEN_WIDTH] = FRAMEBUFFER[x + (y + FONT_HEIGHT) * SCREEN_WIDTH];
         }
     }
     // Clear last line
-    for (size_t x = vga->colMin; x < vga->colMax; x++) {
-        FRAMEBUFFER[x + (vga->rowMax - 1) * 80] = vga->color | ' ';
+    for (size_t y = 0; y < FONT_HEIGHT; y++) {
+        for (size_t x = vga->colMin * FONT_WIDTH; x < vga->colMax * FONT_WIDTH; x++) {
+            FRAMEBUFFER[x + ((vga->rowMax - 1) * FONT_HEIGHT + y) * SCREEN_WIDTH] = BLUE;
+        }
     }
 }
 
@@ -38,13 +40,23 @@ static void ensureCursorInRange(VGA *vga) {
         vga->cursorY++;
     }
 
-    // wrap around Y
+    // scroll output
     if (vga->cursorY >= vga->rowMax) {
         scrollUp(vga);
         vga->cursorX = vga->colMin;
         vga->cursorY = vga->rowMax - 1;
-//        vga->cursorY = vga->rowMin;
     }
+}
+
+static inline void render(VGA *vga, char character) {
+    for (int x = 0; x < FONT_WIDTH; x++) {
+        for (int y = 0; y < FONT_HEIGHT; y++) {
+            int set = FONT[character - 32][FONT_HEIGHT - y - 1] & 1 << (FONT_WIDTH - x - 1);
+            uint8_t clr = set ? vga->color : BLUE;
+            FRAMEBUFFER[(vga->cursorX * FONT_WIDTH + x) + (vga->cursorY * FONT_HEIGHT + y) * SCREEN_WIDTH] = clr;
+        }
+    }
+    vga->cursorX++;
 }
 
 void putChar(VGA *vga, char c) {
@@ -57,10 +69,7 @@ void putChar(VGA *vga, char c) {
             vga->cursorY++;
             break;
         default:
-            if (c >= 32 && c <= 126) // printable range of ASCII characters
-            {
-                FRAMEBUFFER[(vga->cursorX++) + vga->cursorY * 80] = vga->color | c;
-            }
+            render(vga, c);
             break;
     }
     ensureCursorInRange(vga);

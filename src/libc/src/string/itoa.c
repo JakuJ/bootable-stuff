@@ -1,6 +1,6 @@
 #include <string.h>
 
-char *itoa_rec(long num, char *buffer, int base) {
+static char *itoa_rec(long num, char *buffer, int base) {
     if (num > 0) {
         buffer = itoa_rec(num / base, buffer, base);
         char digit = num % base;

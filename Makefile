@@ -4,9 +4,11 @@ CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
 
 # Flags
-CFLAGS = -std=gnu11 -masm=intel
-CFLAGS += -O3 -Wall -Wextra -pedantic -Wno-pointer-arith -fanalyzer
-CFLAGS += -ffreestanding -mno-red-zone -fno-asynchronous-unwind-tables
+CFLAGS = -std=gnu18 -masm=intel
+CFLAGS += -O3 -Wall -Wextra -Wpedantic -Wstrict-aliasing -fanalyzer
+CFLAGS += -Wno-pointer-arith
+CFLAGS += -nostdlib -ffreestanding -fno-pie -fno-stack-protector
+CFLAGS += -mno-red-zone -fno-asynchronous-unwind-tables
 CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/libc/include
 
