@@ -28,6 +28,7 @@ typedef struct {
 
 PT *pt4;
 
+__attribute__((constructor))
 void vmm_init(void) {
     asm ("mov %0, cr3" : "=r"(pt4));
 }

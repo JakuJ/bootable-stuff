@@ -68,7 +68,7 @@ $(libc_objects): build/libc/%.o : src/libc/src/%.c $(libc_headers)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(image_file): $(obj_link_list)
-	$(LD) -o $@ $(obj_link_list) $(LDFLAGS)
+	$(LD) -o $@ $^ $(LDFLAGS)
 
 .PHONY: build ubsan qemu64 hvf clean count_sectors disassemble
 
@@ -78,7 +78,7 @@ qemu64: build
 	-serial stdio \
 	-drive format=raw,file=$(image_file)
 
-ubsan: ubsan_build qemu64
+ubsan: clean ubsan_build qemu64
 
 # cannot use SSE, so might as well compile with -Os and UBSAN
 hvf: ubsan_build

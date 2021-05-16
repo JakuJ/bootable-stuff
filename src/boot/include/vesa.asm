@@ -1,119 +1,130 @@
-; vbe_set_mode:
 ; Sets a VESA mode
-; In\	AX = Width
-; In\	BX = Height
-; In\	CL = Bits per pixel
-; Out\	FLAGS = Carry clear on success
-; Out\	Width, height, bpp, physical buffer, all set in vbe_screen structure
-
+; In\ AX = Width
+; In\ BX = Height
+; In\ CL = Bits per pixel
+; Out\ FLAGS = Carry clear on success
+; Out\ The vbe_info structure
 vbe_set_mode:
-	mov [.width], ax
-	mov [.height], bx
-	mov [.bpp], cl
+  ; Save arguments
+  mov [.width], ax
+  mov [.height], bx
+  mov [.bpp], cl
 
-	sti
+  ; Get VBE BIOS info
+  push es ; apparently some VESA BIOSes destroy ES
+  mov ax, 0x4F00
+  mov di, vbe_info_block
+  int 0x10
+  pop es
 
-	push es					      ; some VESA BIOSes destroy ES, or so I read
-	mov ax, 0x4F00				; get VBE BIOS info
-	mov di, vbe_info_block
-	int 0x10
-	pop es
+  ; BIOS doesn't support VBE?
+  cmp ax, 0x4F
+  jne .error
 
-	cmp ax, 0x4F				  ; BIOS doesn't support VBE?
-	jne .error
+  ; Save video modes far pointer
+  mov ax, word[vbe_info_block.video_modes]
+  mov [.offset], ax
+  mov ax, word[vbe_info_block.video_modes+2]
+  mov [.segment], ax
 
-	mov ax, word[vbe_info_block.video_modes]
-	mov [.offset], ax
-	mov ax, word[vbe_info_block.video_modes+2]
-	mov [.segment], ax
-
-	mov ax, [.segment]
-	mov fs, ax
-	mov si, [.offset]
+  ; Use it
+  mov fs, ax
+  mov si, [.offset]
 
 .find_mode:
-	mov dx, [fs:si]
-	add si, 2
-	mov [.offset], si
-	mov [.mode], dx
-	mov ax, 0
-	mov fs, ax
+  mov dx, [fs:si]               ; read and save next mode
+  mov [.mode], dx
+  add si, 2                     ; move forward
+  mov [.offset], si             ; save new offset
+  mov ax, 0                     ; clear segment
+  mov fs, ax
 
-	cmp dword [.mode], 0xFFFF			; end of list?
-	je .error
+  cmp dword [.mode], 0xffff			; end of list?
+  je .error
 
-	push es
-	mov ax, 0x4F01				; get VBE mode info
-	mov cx, [.mode]
-	mov di, mode_info_block
-	int 0x10
-	pop es
+  ; Get VBE mode info
+  push es
+  mov ax, 0x4F01
+  mov cx, [.mode]
+  mov di, mode_info_block
+  int 0x10
+  pop es
 
-	cmp ax, 0x4F
-	jne .error
+  ; Check for error
+  cmp ax, 0x4F
+  jne .error
 
-	mov ax, [.width]
-	cmp ax, [mode_info_block.width]
-	jne .next_mode
+  ; Check if mode matches arguments
+  mov ax, [.width]
+  cmp ax, [mode_info_block.width]
+  jne .next_mode
 
-	mov ax, [.height]
-	cmp ax, [mode_info_block.height]
-	jne .next_mode
+  mov ax, [.height]
+  cmp ax, [mode_info_block.height]
+  jne .next_mode
 
-	mov al, [.bpp]
-	cmp al, [mode_info_block.bpp]
-	jne .next_mode
+  mov al, [.bpp]
+  cmp al, [mode_info_block.bpp]
+  jne .next_mode
 
-	; If we make it here, we've found the correct mode!
-	mov ax, [.width]
-	mov word[vbe_screen.width], ax
-	mov ax, [.height]
-	mov word[vbe_screen.height], ax
-	mov eax, [mode_info_block.framebuffer]
-	mov dword[vbe_screen.physical_buffer], eax
-	mov ax, [mode_info_block.pitch]
-	mov word[vbe_screen.bytes_per_line], ax
-	mov eax, 0
-	mov al, [.bpp]
-	mov byte[vbe_screen.bpp], al
-	shr eax, 3
-	mov dword[vbe_screen.bytes_per_pixel], eax
+  ; Correct mode found, save info
+  mov ax, [.width]
+  mov word[vbe_info.width], ax
 
-	mov ax, [.width]
-	shr ax, 3
-	dec ax
-	mov word[vbe_screen.x_cur_max], ax
+  mov ax, [.height]
+  mov word[vbe_info.height], ax
 
-	mov ax, [.height]
-	shr ax, 4
-	dec ax
-	mov word[vbe_screen.y_cur_max], ax
+  mov eax, [mode_info_block.framebuffer]
+  mov dword[vbe_info.physical_buffer], eax
 
-	; Set the mode
-	push es
-	mov ax, 0x4F02
-	mov bx, [.mode]
-	or bx, 0x4000			; enable LFB
-	mov di, 0			; not sure if some BIOSes need this... anyway it doesn't hurt
-	int 0x10
-	pop es
+  mov ax, [mode_info_block.pitch]
+  mov word[vbe_info.bytes_per_line], ax
 
-	cmp ax, 0x4F
-	jne .error
+  xor eax, eax
+  mov al, [.bpp]
+  mov byte[vbe_info.bpp], al
 
-	clc
-	ret
+  shr eax, 3
+  mov dword[vbe_info.bytes_per_pixel], eax
+
+  mov ax, [.width]
+  shr ax, 3         ; assuming 8-bit wide font
+  dec ax
+  mov word[vbe_info.x_cur_max], ax
+
+  mov ax, [.height]
+  shr ax, 4         ; assuming 16-bit high font
+  dec ax
+  mov word[vbe_info.y_cur_max], ax
+
+  ; Set the mode
+  push es
+  mov ax, 0x4F02
+  mov bx, [.mode]
+  or bx, 0x4000			; enable linear framebuffer
+  mov di, 0			    ; some BIOSes might need this
+  int 0x10
+  pop es
+
+  ; Check for error
+  cmp ax, 0x4F
+  jne .error
+
+  ; Return successfully
+  clc
+  ret
 
 .next_mode:
-	mov ax, [.segment]
-	mov fs, ax
-	mov si, [.offset]
-	jmp .find_mode
+  mov ax, [.segment]
+  mov fs, ax
+  mov si, [.offset]
+  jmp .find_mode
 
 .error:
-	stc
-	ret
+  stc ; set carry flag indicating error
+  ret
 
+; Temporary variables
 .width:				  dw 0
 .height:				dw 0
 .bpp:				    db 0
@@ -122,8 +133,8 @@ vbe_set_mode:
 .mode:				  dw 0
 
 vbe_info_block:
-	.signature:		  db "VBE2"	      ; indicate support for VBE 2.0+
-	.version:       dw 0            ; VBE version; high byte is major version, low byte is minor version
+  .signature:		  db "VBE2"	      ; indicate support for VBE 2.0+
+  .version:       dw 0            ; VBE version; high byte is major version, low byte is minor version
   .oem:           dd 0            ; segment:offset pointer to OEM
   .capabilities:  dd 0            ; bitfield that describes card capabilities
   .video_modes:   dd 0            ; segment:offset pointer to list of supported video modes
@@ -170,10 +181,9 @@ mode_info_block:
   .off_screen_mem_size:     dw 0
   .reserved1:               times 206 db 0
 
-
-global vbe
-vbe:
-vbe_screen:
+; Output structure with VESA mode info
+global vbe_info
+vbe_info:
   .width:				      dw 0
   .height:				    dw 0
   .bpp:               db 0

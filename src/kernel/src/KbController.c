@@ -1,5 +1,7 @@
 #include <KbController.h>
 
+#define MAX_HANDLERS 8
+
 char translationTable[] = {0, 0,
                            '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
                            'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0,
@@ -10,7 +12,7 @@ Handler pressHandlers[MAX_HANDLERS];
 Handler releaseHandlers[MAX_HANDLERS];
 
 static char scanCodeToChar(unsigned char scancode) {
-    if (scancode < MAX_SCANCODES) {
+    if (scancode < sizeof(translationTable)) {
         return translationTable[scancode];
     }
     return 0;

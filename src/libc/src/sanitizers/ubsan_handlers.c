@@ -14,7 +14,7 @@ typedef struct {
 
 typedef struct {
     uint16_t type_kind, type_info;
-    char* type_name;
+    char *type_name;
 } type_descriptor;
 
 typedef struct {
@@ -28,6 +28,12 @@ typedef struct {
     unsigned char log_alignment;
     unsigned char type_check_kind;
 } type_mismatch_data_v1;
+
+typedef struct {
+    source_location location;
+    type_descriptor *array_type;
+    type_descriptor *index_type;
+} out_of_bounds_data;
 
 static void ubsan_common(source_location location) {
     log("[UBSAN] at %s, line %d, column %d\n", location.filename, location.line, location.column);
@@ -46,15 +52,19 @@ void __ubsan_handle_shift_out_of_bounds(shift_out_of_bounds_data *data, unsigned
 
 
 void __ubsan_handle_type_mismatch_v1(type_mismatch_data_v1 *data, unsigned long index) {
-    log("[UBSAN] Type mismatch (ix: %lu, type: %s, align: %lu)\n", index, data->type->type_name, 1UL << data->log_alignment);
+    log("[UBSAN] Type mismatch (ix: %lu, type: %s, align: %lu)\n", index, data->type->type_name,
+        1UL << data->log_alignment);
+    ubsan_common(data->location);
+}
+
+void __ubsan_handle_out_of_bounds(out_of_bounds_data *data, unsigned long index) {
+    log("[UBSAN] Index out of bounds (%lu)\n", index);
     ubsan_common(data->location);
 }
 
 
 #define HANDLER2(fun) void fun(void *data, unsigned long index) {log(#fun ": %p, %lu\n", data, index);}
 #define HANDLER3(fun) void fun(void *data, unsigned long lhs, unsigned long rhs) {log(#fun ": %p, %lu, %lu\n", data, lhs, rhs);}
-
-HANDLER2(__ubsan_handle_out_of_bounds)
 
 HANDLER2(__ubsan_handle_load_invalid_value)
 

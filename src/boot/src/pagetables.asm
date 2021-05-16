@@ -8,9 +8,12 @@ global PT
 
 PML4T:
 resb 512 * 8
+
 PDPT:
 resb 512 * 8
+
 PDT:
 resb 512 * 8
+
 PT:
 resb 512 * 8

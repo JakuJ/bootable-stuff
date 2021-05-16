@@ -3,14 +3,29 @@
 #include <PIC.h>
 #include <IDT.h>
 #include <Diagnostics.h>
-#include <memory/PMM.h>
-#include <memory/VMM.h>
+#include <KbController.h>
+
+void keyPressed(char c, unsigned char code) {
+    if (c) {
+        log("%c", c);
+    } else {
+        switch (code) {
+            case 28:
+                log("\n");
+                break;
+            case 14:
+                log("\b");
+                break;
+            default:
+                log("<%d>", code);
+                break;
+        }
+    }
+}
 
 // Kernel entry point
 void kmain() {
     // Initialize resources
-    pmm_init();
-    vmm_init();
     vga_init();
 
     PIC_remap(0x20, 0x28);
@@ -27,6 +42,9 @@ void kmain() {
     log("\n");
     sse_info();
     log("\n");
+
+    subscribePress(keyPressed);
+    log("Keyboard input:\n");
 
     enable_interrupts();
 

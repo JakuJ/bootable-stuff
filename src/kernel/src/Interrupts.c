@@ -10,6 +10,15 @@
 #define KBD_STATUS_MASK     0x80
 #define NUM_EXCEPTIONS      21
 
+typedef struct {
+    uint64_t ds;
+    uint64_t r15, r14, r13, r12, r11, r10, r9, r8;
+    uint64_t ax, cx, dx, bx, useless_sp, bp, si, di;
+    uint64_t int_no;
+    uint64_t err_code;
+    uint64_t ip, cs, e_flags, sp, ss; // Pushed by the processor automatically.
+} ISR_Frame;
+
 bool are_interrupts_enabled() {
     unsigned long flags;
     asm volatile ("pushf\n pop %0" : "=g"(flags));
@@ -109,9 +118,9 @@ void isr_handler(const ISR_Frame regs) {
 }
 
 void irq0_handler(void) {
-    static unsigned long counter = 0;
+    static unsigned long clock = 0;
     PIC_send_EOI(0);
-    log("Clock: %lu\r", counter++);
+    clock++;
 }
 
 void irq1_handler(void) {
@@ -128,7 +137,7 @@ void irq1_handler(void) {
     }
 }
 
-#define BLANK_IRQ(X) void irq##X##_handler(void) { PIC_send_EOI(X); }
+#define BLANK_IRQ(X) void irq##X##_handler(void) { PIC_send_EOI(X); log("Received IRQ " #X "\n"); }
 
 FOR_EACH(BLANK_IRQ,
          2, 3, 4, 5, 6, 7, 8)

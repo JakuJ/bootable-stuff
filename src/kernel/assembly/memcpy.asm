@@ -8,14 +8,14 @@ global kmemcpy_128
 kmemcpy_128:
   shr rdx, 7      ; divide by 128 (8 * 128-bit registers = 8 * 16 = 128 bytes)
 
-.loop_128:
-  ;SSE2 prefetch
+.loop:
+  ; SSE2 prefetch
   prefetchnta [rsi + 128]
   prefetchnta [rsi + 160]
   prefetchnta [rsi + 192]
   prefetchnta [rsi + 224]
 
-  ;move data from src to registers
+  ; Move data from src to registers
   movdqa xmm0, [rsi]
   movdqa xmm1, [rsi + 16]
   movdqa xmm2, [rsi + 32]
@@ -25,7 +25,7 @@ kmemcpy_128:
   movdqa xmm6, [rsi + 96]
   movdqa xmm7, [rsi + 112]
 
-  ;move data from registers to dest
+  ; Move data from registers to dest
   movntdq [rdi], xmm0
   movntdq [rdi + 16], xmm1
   movntdq [rdi + 32], xmm2
@@ -39,23 +39,23 @@ kmemcpy_128:
   add rdi, 128
 
   dec rdx
-  jnz .loop_128
+  jnz .loop
   ret
 
 global kmemcpy
 kmemcpy:
-  mov rcx, rdx    ; rcx is out counter
+  mov rcx, rdx    ; rcx is our counter
   shr rcx, 7      ; divide by 128 (8 * 128-bit registers = 8 * 16 = 128 bytes)
   jz .end_loop_128
 
 .loop_128:
-  ;SSE2 prefetch
+  ; SSE2 prefetch
   prefetchnta [rsi + 128]
   prefetchnta [rsi + 160]
   prefetchnta [rsi + 192]
   prefetchnta [rsi + 224]
 
-  ;move data from src to registers
+  ; Move data from src to registers
   movdqa xmm0, [rsi]
   movdqa xmm1, [rsi + 16]
   movdqa xmm2, [rsi + 32]
@@ -65,7 +65,7 @@ kmemcpy:
   movdqa xmm6, [rsi + 96]
   movdqa xmm7, [rsi + 112]
 
-  ;move data from registers to dest
+  ; Move data from registers to dest
   movntdq [rdi], xmm0
   movntdq [rdi + 16], xmm1
   movntdq [rdi + 32], xmm2
@@ -81,7 +81,8 @@ kmemcpy:
   loop .loop_128
 .end_loop_128:
 
-  and rdx, 0x07f   ; the rest, up to 128 bytes
+  ; The rest, up to 128 bytes
+  and rdx, 0x07f
   mov rcx, rdx
   shr rcx, 4
   jz .end_loop_16
@@ -96,7 +97,8 @@ kmemcpy:
   loop .loop_16
 .end_loop_16:
 
-  and rdx, 0x0f   ; the rest, up to 16 bytes
+  ; The rest, up to 16 bytes
+  and rdx, 0x0f
   mov rcx, rdx
 
   rep movsb

@@ -3,9 +3,6 @@
 #include <stdbool.h>
 #include <VGA/VGA.h>
 
-#define MAX_HANDLERS 16
-#define MAX_SCANCODES 88
-
 typedef void(*Handler)(char, unsigned char);
 
 bool subscribePress(Handler h);

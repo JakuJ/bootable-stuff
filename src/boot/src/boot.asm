@@ -7,16 +7,16 @@ boot:
 
 ; Reset disk system
 mov ah, 0
-int 0x13 ; dl = drive number (already set by the BIOS)
+int 0x13    ; dl = drive number (already set by the BIOS)
 
 ; Read from hard drive and write to RAM
-mov bx, stage2  ; bx = address to write the kernel to
+mov bx, stage2              ; bx = address to write the kernel to
 mov al, [sectors_to_read] 	; al = number of sectors to read
-mov ch, 0       ; cylinder/track = 0
-mov dh, 0       ; head           = 0
-mov cl, 2       ; sector         = 2
-mov ah, 2       ; ah = 2: read from drive
-int 0x13   		  ; Sets: ah = status, al = amount read
+mov ch, 0                   ; cylinder/track = 0
+mov dh, 0                   ; head           = 0
+mov cl, 2                   ; sector         = 2
+mov ah, 2                   ; ah = 2: read from drive
+int 0x13   		              ; Sets: ah = status, al = amount read
 
 jmp stage2
 
