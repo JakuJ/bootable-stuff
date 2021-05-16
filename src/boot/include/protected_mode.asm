@@ -6,7 +6,7 @@ protected_mode:
   call setup_paging
   call enable_sse
 
-  lgdt [GDT64_Pointer]                    ; Load the 64-bit GDT
+  lgdt [GDT64_Pointer]           ; Load the 64-bit GDT
   jmp GDT64_Code:long_mode       ; Enter 64-bit long mode.
 
 check_cpuid:

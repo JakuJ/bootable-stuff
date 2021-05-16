@@ -4,6 +4,7 @@
 #include <IDT.h>
 #include <Diagnostics.h>
 #include <KbController.h>
+#include <Ring3.h>
 
 void keyPressed(char c, unsigned char code) {
     if (c) {
@@ -47,6 +48,8 @@ void kmain() {
     log("Keyboard input:\n");
 
     enable_interrupts();
+
+    enter_user_mode();
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

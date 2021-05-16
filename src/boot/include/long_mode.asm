@@ -36,3 +36,4 @@ align 4
 kernel_stack_bottom: equ $
 resb 16384
 kernel_stack_top:
+global kernel_stack_top

@@ -1,3 +1,5 @@
+section .text
+
 ; Optimized SSE2 memcpy
 ; Input must be aligned to 16-byte boundary.
 ; Count must not be zero and must be a multiple of 128 bytes.
@@ -42,6 +44,10 @@ kmemcpy_128:
   jnz .loop
   ret
 
+; General SSE2 memcpy
+; IN\ rdi - destination
+; IN\ rsi - source
+; IN\ rdx - count in bytes
 global kmemcpy
 kmemcpy:
   mov rcx, rdx    ; rcx is our counter
