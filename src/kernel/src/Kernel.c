@@ -44,12 +44,16 @@ void kmain() {
     sse_info();
     log("\n");
 
-    subscribePress(keyPressed);
-    log("Keyboard input:\n");
-
     enable_interrupts();
 
+    log("Entering ring 3...\n");
+
     enter_user_mode();
+
+    log("Back from ring 3!\n");
+
+    subscribePress(keyPressed);
+    log("\nKeyboard input:\n");
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

@@ -17,19 +17,14 @@ extern uintptr_t GDT64_TSS_ADDR;
 tss_entry tss;
 extern uintptr_t kernel_stack_top;
 
-static void print_gdt(void) {
-    uint64_t *gdt = (uint64_t *) (uintptr_t) (&GDT64_TSS_ADDR);
-    log("TSS bytes: %lx\n", *gdt);
-}
+extern void flush_tss(void);
+
+extern void jump_usermode(void);
 
 static void setup_tss(void) {
     // Compute the base and limit of the TSS for use in the GDT entry.
     uint64_t base = (uint64_t) &tss;
     size_t limit = base + sizeof(tss_entry);
-
-    log("Base: %lx, limit: %lx\n", base, limit);
-
-    print_gdt();
 
     uint16_t *gdt_16 = (uint16_t *) (uintptr_t) (&GDT64_TSS_ADDR);
     gdt_16[0] = limit & 0xffff; // limit low
@@ -47,19 +42,14 @@ static void setup_tss(void) {
 
     gdt_8[7] = (base & (0xffUL << 24)) >> 24; // base high
 
-    print_gdt();
-
     tss = (tss_entry) {
-        .rsp0 = (uintptr_t) (&kernel_stack_top),
+            .rsp0 = (uintptr_t) (&kernel_stack_top),
     };
+
+    flush_tss();
 }
-
-extern void flush_tss(void);
-
-extern void jump_usermode(void);
 
 void enter_user_mode(void) {
     setup_tss();
-    flush_tss();
     jump_usermode();
 }
