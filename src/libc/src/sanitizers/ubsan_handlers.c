@@ -67,3 +67,7 @@ HANDLER3(__ubsan_handle_divrem_overflow)
 HANDLER3(__ubsan_handle_add_overflow)
 
 HANDLER3(__ubsan_handle_mul_overflow)
+
+HANDLER3(__ubsan_handle_sub_overflow)
+
+HANDLER3(__ubsan_handle_vla_bound_not_positive)

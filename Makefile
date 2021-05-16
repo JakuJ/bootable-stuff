@@ -47,8 +47,8 @@ image_file = build/image.bin
 # General build targets
 build: $(image_file) count_sectors
 
-ubsan: CFLAGS += -Os -fsanitize=undefined
-ubsan: build
+ubsan_build: CFLAGS += -Os -fsanitize=undefined
+ubsan_build: build
 
 # Object file targets
 $(bootloader_objs) $(crti_obj) $(crtn_obj) : build/boot/%.o : src/boot/src/%.asm $(boot_includes)
@@ -78,8 +78,10 @@ qemu64: build
 	-serial stdio \
 	-drive format=raw,file=$(image_file)
 
+ubsan: ubsan_build qemu64
+
 # cannot use SSE, so might as well compile with -Os and UBSAN
-hvf: ubsan
+hvf: ubsan_build
 	qemu-system-x86_64 \
 	-M accel=hvf -cpu host,+xsave \
 	-serial stdio \

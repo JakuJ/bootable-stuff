@@ -20,13 +20,17 @@ void pmm_init(void) {
 static void *allocate_page_from(uintptr_t start) {
     size_t i = (start - RESERVED_START) / PAGE_SIZE / 64;
 
-    uint64_t first_set;
     for (; i < PAGES; i++) {
-        asm ("bsr %0, %1" : "=r"(first_set) : "r"(bitmap[i]));
+        uint64_t first_set;
+        int zero;
+        asm ("bsr %0, %2" : "=r" (first_set), "=@ccz"(zero) : "mr" (bitmap[i]));
+
+        if (__builtin_expect(zero, 0)) continue;
+
         if (first_set != 0) {
             bitmap[i] &= ~(1UL << first_set);
             return (void *) (RESERVED_START + PAGE_SIZE * (64 * i + (63 - first_set)));
-        } else if (bitmap[i]) {
+        } else {
             bitmap[i] = 0;
             return (void *) (RESERVED_START + PAGE_SIZE * (64 * i + 63));
         }

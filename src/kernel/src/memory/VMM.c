@@ -42,7 +42,7 @@ static inline void flush_tlb(void *addr) {
     asm volatile("invlpg [%0]"::"r"((unsigned long) addr) :"memory");
 }
 
-bool vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
+void vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
     unsigned int pt4_index = (virtual >> 39) & 0x1ff;
     unsigned int pt3_index = (virtual >> 30) & 0x1ff;
     unsigned int pt2_index = (virtual >> 21) & 0x1ff;
@@ -50,7 +50,6 @@ bool vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
 
     bool interrupts = are_interrupts_enabled();
     disable_interrupts();
-    bool anything_changed = false;
 
     // Check P4 entry
     if (!(pt4->entries[pt4_index] & PRESENT_MASK)) {
@@ -59,7 +58,6 @@ bool vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
 
         // Point P4 entry to that P3 table
         pt4->entries[pt4_index] = (uint64_t) pt3 | 0x3; // read/write, present
-        anything_changed = true;
     }
 
     // Check P3 entry
@@ -70,7 +68,6 @@ bool vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
 
         // Point P3 entry to that P2 table
         pt3->entries[pt3_index] = (uint64_t) pt2 | 0x3; // read/write, present
-        anything_changed = true;
     }
 
     // Check P2 entry
@@ -81,7 +78,6 @@ bool vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
 
         // Point P2 entry to that P1 table
         pt2->entries[pt2_index] = (uint64_t) page_table | 0x3; // read/write, present
-        anything_changed = true;
     }
 
     // Check P1 (page table) entry
@@ -93,7 +89,6 @@ bool vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
         }
 
         page_table->entries[page_index] = physical | 0x3; // read/write, present
-        anything_changed = true;
 
         flush_tlb((void *) physical);
     }
@@ -101,16 +96,12 @@ bool vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
     if (interrupts) {
         enable_interrupts();
     }
-
-    return anything_changed;
 }
 
-static bool ensure_pages_present(void *vstart, size_t pages) {
-    bool anything_changed = false;
+static void ensure_pages_present(void *vstart, size_t pages) {
     for (size_t i = 0; i < pages; i++) {
-        anything_changed |= vmm_map_memory(0, (uintptr_t) vstart + i * PAGE_SIZE);
+        vmm_map_memory(0, (uintptr_t) vstart + i * PAGE_SIZE);
     }
-    return anything_changed;
 }
 
 typedef struct free_block {
@@ -141,19 +132,25 @@ static void print_blockchain(void) {
     log("Total: %lu pages\n", total);
 }
 
+size_t pages_allocated_for_blockchain;
+
 void *vmm_allocate_pages(size_t pages) {
     if (!blockchain) {
         if (first_alloc) {
+            // We need to allocate the blockchain first
             if (!allocating_base) {
+                // Allocate blockchain
                 allocating_base = true;
                 blockchain = (free_block *) kmalloc(sizeof(free_block));
                 *blockchain = (free_block) {
-                        .start = (void *) (HEAP_START + pages * PAGE_SIZE),
-                        .size = MAX_HEAP_SIZE - pages,
+                        .start = (void *) (HEAP_START + pages_allocated_for_blockchain * PAGE_SIZE),
+                        .size = MAX_HEAP_SIZE - pages_allocated_for_blockchain,
                 };
             } else {
+                // We are inside the kmalloc called from the block above
                 allocating_base = false;
                 first_alloc = false;
+                pages_allocated_for_blockchain = pages;
 
                 void *start = (void *) HEAP_START;
                 ensure_pages_present(start, pages);
@@ -177,10 +174,7 @@ void *vmm_allocate_pages(size_t pages) {
     }
 
     void *span_start = (void *) block->start;
-    if (ensure_pages_present(span_start, pages)) {
-        // Try again if paging structures changed
-        return vmm_allocate_pages(pages);
-    }
+    ensure_pages_present(span_start, pages);
 
     // shrink the block
     block->start += pages * PAGE_SIZE;

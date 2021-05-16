@@ -1,6 +1,7 @@
 #include <Diagnostics.h>
-#include <string.h>
 #include <VGA/VGA.h>
+
+#define btoa(x) ((x) ? "true" : "false")
 
 extern int query_cpu(unsigned int page, int reg_no, int bit);
 

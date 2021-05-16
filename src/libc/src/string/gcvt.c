@@ -8,15 +8,20 @@ char *gcvt(double value, int ndigits, char *buf) {
     }
 
     // print decimal part
-    int dec = (int)value;
+    int dec = (int) value;
     buf = itoa(dec, buf, 10);
 
     // print fractional part
     *buf++ = '.';
     double frac = value - dec;
 
-    buf = itoa(frac * pow(10.0, ndigits), buf, 10);
+    char tmp[ndigits];
+    itoa(frac * pow(10.0, ndigits), tmp, 10);
 
-    *buf = '\0';
-    return buf;
+    unsigned zeros = ndigits - strlen(tmp);
+    while (zeros--) {
+        *buf++ = '0';
+    }
+
+    return strcpy(buf, tmp);
 }

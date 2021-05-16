@@ -1,6 +1,5 @@
 #pragma once
 
-#define DEFAULT(L, R) L = L ? L : R
 
 #define FE_0(WHAT)
 #define FE_1(WHAT, X) WHAT(X)

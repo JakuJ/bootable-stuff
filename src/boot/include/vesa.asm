@@ -124,14 +124,14 @@ vbe_set_mode:
 vbe_info_block:
 	.signature:		  db "VBE2"	      ; indicate support for VBE 2.0+
 	.version:       dw 0            ; VBE version; high byte is major version, low byte is minor version
-  .oem:           dd 0   ; segment:offset pointer to OEM
-  .capabilities:  dd 0   ; bitfield that describes card capabilities
-  .video_modes:   dd 0   ; segment:offset pointer to list of supported video modes
+  .oem:           dd 0            ; segment:offset pointer to OEM
+  .capabilities:  dd 0            ; bitfield that describes card capabilities
+  .video_modes:   dd 0            ; segment:offset pointer to list of supported video modes
   .video_memory:  dw 0            ; amount of video memory in 64KB blocks
   .software_rev:  dw 0            ; software revision
-  .vendor:        dd 0   ; segment:offset to card vendor string
-  .product_name:  dd 0   ; segment:offset to card model name
-  .product_rev:   dd 0   ; segment:offset pointer to product revision
+  .vendor:        dd 0            ; segment:offset to card vendor string
+  .product_name:  dd 0            ; segment:offset to card model name
+  .product_rev:   dd 0            ; segment:offset pointer to product revision
   .reserved:      times 222 db 0  ; reserved for future expansion
   .oem_data:      times 256 db 0  ; OEM BIOSes store their strings in this area
 
