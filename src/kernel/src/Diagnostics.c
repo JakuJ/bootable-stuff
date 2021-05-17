@@ -7,6 +7,8 @@ extern int query_cpu(unsigned int page, int reg_no, int bit);
 
 extern void enable_avx(void);
 
+extern int linker_first_free_page;
+
 void section_info(void) {
 
 #define PRINT_SECTION(X) \
@@ -15,12 +17,18 @@ void section_info(void) {
     (unsigned long)&_##X##_END_ - (unsigned long)&_##X##_START_, \
     (unsigned long)(&_##X##_START_), (unsigned long)(&_##X##_END_), (void*)&_##X##_START_, (void*)&_##X##_END_);
 
-    log("OS image section sizes:\n");
+    log("Image section sizes:\n");
     PRINT_SECTION(BOOT)
+    log("\n");
     PRINT_SECTION(TEXT)
-    PRINT_SECTION(RODATA)
     PRINT_SECTION(DATA)
+    log("\n");
+    PRINT_SECTION(OS_TEXT)
+    PRINT_SECTION(OS_DATA)
+    log("\n");
     PRINT_SECTION(BSS)
+    PRINT_SECTION(OS_BSS)
+    log("\n\tFirst free page: %p\n", (void *) &linker_first_free_page);
 }
 
 void sse_info(void) {

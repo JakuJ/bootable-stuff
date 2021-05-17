@@ -8,29 +8,51 @@ SECTIONS {
         *(.gdt)
         _BOOT_END_ = .;
     }
-    .text : ALIGN(4K)
+    kernel_text : ALIGN(4K)
     {
         _TEXT_START_ = .;
-        *(.text)
+        build/kernel/*(.text)
+        build/libc/*(.text)
+        build/kernel/*(.rodata)
+        build/libc/*(.rodata)
         _TEXT_END_ = .;
     }
-    .rodata : ALIGN(4K)
-    {
-        _RODATA_START_ = .;
-        *(.rodata)
-        _RODATA_END_ = .;
-    }
-    .data : ALIGN(4K)
+    kernel_data : ALIGN(4K)
     {
         _DATA_START_ = .;
-        *(.data)
+        build/boot/*(.data)
+        build/kernel/*(.data)
+        build/libc/*(.data)
         _DATA_END_ = .;
     }
-    .bss : ALIGN(4K)
+    os_text : ALIGN(4K)
+    {
+        _OS_TEXT_START_ = .;
+        build/os/*(.text)
+        build/os/*(.rodata)
+        _OS_TEXT_END_ = .;
+    }
+    os_data : ALIGN(4K)
+    {
+        _OS_DATA_START_ = .;
+        build/os/*(.data)
+        _OS_DATA_END_ = .;
+    }
+    kernel_bss : ALIGN(4K)
     {
         _BSS_START_ = .;
-        *(.bss)
-        *(COMMON)
+        build/boot/*(.bss)
+        build/boot/*(COMMON)
+        build/kernel/*(.bss)
+        build/kernel/*(COMMON)
         _BSS_END_ = .;
     }
+    os_bss : ALIGN(4K)
+    {
+        _OS_BSS_START_ = .;
+        build/os/*(.bss)
+        build/os/*(COMMON)
+        _OS_BSS_END_ = .;
+    }
+    linker_first_free_page = ALIGN(4K);
 }

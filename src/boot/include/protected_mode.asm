@@ -6,7 +6,7 @@ protected_mode:
   call setup_paging
   call enable_sse
 
-  lgdt [GDT64_Pointer]                    ; Load the 64-bit GDT
+  lgdt [GDT64_Pointer]           ; Load the 64-bit GDT
   jmp GDT64_Code:long_mode       ; Enter 64-bit long mode.
 
 check_cpuid:
@@ -66,20 +66,21 @@ setup_paging:
   ; PML4T[0] -> PDPT
   ; PDPT[0] -> PDT
   ; PDT[0] -> PT
+  ; TODO: Change these 7s back to 3s (protect kernel pages)
   mov eax, PDPT
-  or eax, 3
+  or eax, 7
   mov dword [PML4T], eax
 
   mov eax, PDT
-  or eax, 3
+  or eax, 7
   mov dword [PDPT], eax
 
   mov eax, PT
-  or eax, 3
+  or eax, 7
   mov dword [PDT], eax
 
   ; Identity map the first 2MB
-  mov ebx, 0x00000003          ; Physical address | flags
+  mov ebx, 0x00000007          ; Physical address | flags
   mov ecx, 512                 ; Iteration counter
   mov edi, PT                  ; Pointer to the current PT cell
   .set_entry:

@@ -4,6 +4,7 @@
 #include <IDT.h>
 #include <Diagnostics.h>
 #include <KbController.h>
+#include <Ring3.h>
 
 void keyPressed(char c, unsigned char code) {
     if (c) {
@@ -43,10 +44,13 @@ void kmain() {
     sse_info();
     log("\n");
 
-    subscribePress(keyPressed);
-    log("Keyboard input:\n");
-
     enable_interrupts();
+
+    log("Entering ring 3...\n");
+
+    enter_user_mode();
+
+    log("Back from ring 3 somehow!\n");
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {

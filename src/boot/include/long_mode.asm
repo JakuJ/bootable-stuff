@@ -33,6 +33,7 @@ section .bss
 align 4
 
 ; Allocate 16KB of stack space
-kernel_stack_bottom: equ $
+kernel_stack_bottom:
 resb 16384
 kernel_stack_top:
+global kernel_stack_top

@@ -2,7 +2,7 @@
 
 **Work in progress.**
 
-This repository contains a custom bootloader and an x86_64 kernel, both written from scratch.
+This repository contains a two-stage bootloader, an x86_64 kernel, and a ring 3 OS, all written from scratch.
 
 ![current state](docs/current.png)
 
@@ -44,10 +44,11 @@ to build the image and boot it in QEMU.
     - [ ] Handling page faults
     - [x] Physical memory manager
     - [x] Virtual memory manager
-    - [x] Kernel heap management (`kmalloc`, `kfree`)
-        - [x] Porting [liballoc](https://github.com/blanham/liballoc)
-- Standard library
-    - [ ] Porting an actual libc implementation
+    - [x] Kernel heap management (`kmalloc`, `kfree`) through [liballoc](https://github.com/blanham/liballoc)
+- Operating system
+    - [x] Getting to ring 3
+    - [x] Handling `syscall`
+    - [ ] A functional syscall ABI
 
 # Caveats
 
@@ -72,3 +73,4 @@ codesign -s - --entitlements qemu/app.entitlements --force "$(command -v qemu-sy
 ```
 
 Note that the HVF in QEMU **does not support SSE**. Do not compile with `-O3` if you want to use the `hvf` target.
+This target will be removed in the future, as x86_64 does need SSE2 to be present.

@@ -52,9 +52,9 @@ const char *exceptions[NUM_EXCEPTIONS] = {
 void isr_handler(const ISR_Frame regs) {
     // Print exception type
     if (regs.int_no < NUM_EXCEPTIONS) {
-        log("Exception: %s\n", exceptions[regs.int_no]);
+        log("\nException: %s\n", exceptions[regs.int_no]);
     } else {
-        log("Unknown exception: %lu\n", regs.int_no);
+        log("\nUnknown exception: %lu\n", regs.int_no);
     }
 
     // Special handing for some exceptions
@@ -110,9 +110,15 @@ void isr_handler(const ISR_Frame regs) {
     // Register dump
     log("Registers:\nA: %lx | B: %lx | C: %lx | D: %lx\n", regs.ax, regs.bx, regs.cx, regs.dx);
     log("DI: %lx | SI: %lx\nIP: %lx\nBP: %lx | SP: %lx\n", regs.di, regs.si, regs.ip, regs.bp, regs.sp);
-    log("CS: %lx | DS: %lx | SS: %lx\n", regs.cs, regs.ds, regs.ss);
+    log("CS: %lx | DS: %lx | SS: %lx | EFLAGS: %lx\n", regs.cs, regs.ds, regs.ss, regs.e_flags);
     log("R8: %lx | R9: %lx | R10: %lx | R11: %lx\n", regs.r8, regs.r9, regs.r10, regs.r11);
     log("R12: %lx | R13: %lx | R14: %lx | R15: %lx\n", regs.r12, regs.r13, regs.r14, regs.r15);
+
+    log("Stack trace:\n");
+    uint64_t* stack_top = (uint64_t *) (uintptr_t) regs.sp;
+    for (int i = 0; i < 10; i++) {
+        log("%p | %lx\n", (void*)(stack_top + i), stack_top[i]);
+    }
 
     while (true);
 }
