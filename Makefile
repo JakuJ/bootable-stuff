@@ -10,7 +10,7 @@ CFLAGS += -Wno-pointer-arith
 CFLAGS += -nostdlib -ffreestanding -fno-pie
 CFLAGS += -mno-red-zone -fno-asynchronous-unwind-tables
 CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
-CFLAGS += -I src/kernel/include -I src/libc/include
+CFLAGS += -I src/kernel/include -I src/libc/include -I src/os/include
 
 LDFLAGS = -n -T linker.ld
 
@@ -24,8 +24,15 @@ kernel_objects = $(patsubst src/kernel/src/%.c, build/kernel/%.o, $(kernel_c_sou
 libc_c_sources = $(shell find src/libc/src -name *.c)
 libc_objects = $(patsubst src/libc/src/%.c, build/libc/%.o, $(libc_c_sources))
 
+os_asm_sources = $(shell find src/os/assembly/src -name *.asm)
+os_asm_objects = $(patsubst src/os/assembly/src/%.asm, build/os/assembly/%.o, $(os_asm_sources))
+
+os_c_sources = $(shell find src/os/src -name *.c)
+os_objects = $(patsubst src/os/src/%.c, build/os/%.o, $(os_c_sources))
+
 kernel_headers = $(shell find src/kernel/include -name *.h)
 libc_headers = $(shell find src/libc/include -name *.h)
+os_headers = $(shell find src/os/include -name *.h)
 
 boot_includes = $(shell find src/boot/include -name *.asm)
 bootloader_sources = $(shell find src/boot/src -name *.asm)
@@ -39,7 +46,7 @@ crtend_obj = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 
 bootloader_objs := $(filter-out $(crti_obj) $(crtn_obj),$(bootloader_objs))
 
-all_objects = $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(libc_objects)
+all_objects = $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(libc_objects) $(os_asm_objects) $(os_objects)
 obj_link_list = $(crti_obj) $(crtbegin_obj) $(all_objects) $(crtend_obj) $(crtn_obj)
 
 image_file = build/image.bin
@@ -59,7 +66,15 @@ $(kernel_asm_objects): build/kernel/assembly/%.o : src/kernel/assembly/src/%.asm
 	mkdir -p $(dir $@) && \
 	$(AS) $(patsubst build/kernel/assembly/%.o, src/kernel/assembly/src/%.asm, $@) -o $@
 
+$(os_asm_objects): build/os/assembly/%.o : src/os/assembly/src/%.asm
+	mkdir -p $(dir $@) && \
+	$(AS) $(patsubst build/os/assembly/%.o, src/os/assembly/src/%.asm, $@) -o $@
+
 $(kernel_objects): build/kernel/%.o : src/kernel/src/%.c $(kernel_headers)
+	mkdir -p $(dir $@) && \
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+$(os_objects): build/os/%.o : src/os/src/%.c $(os_headers)
 	mkdir -p $(dir $@) && \
 	$(CC) -c -o $@ $< $(CFLAGS)
 
@@ -70,13 +85,18 @@ $(libc_objects): build/libc/%.o : src/libc/src/%.c $(libc_headers)
 $(image_file): $(obj_link_list)
 	$(LD) -o $@ $^ $(LDFLAGS)
 
-.PHONY: build ubsan qemu64 hvf clean count_sectors disassemble
+.PHONY: build ubsan qemu64 trace hvf clean count_sectors disassemble
+
+QEMU_CMD = qemu-system-x86_64 -no-reboot \
+           	-cpu qemu64,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4a,+sse4.1,+sse4.2,+xsave \
+           	-serial stdio \
+           	-drive format=raw,file=$(image_file)
 
 qemu64: build
-	qemu-system-x86_64 -no-reboot \
-	-cpu qemu64,+mmx,+sse,+sse2,+sse3,+ssse3,+sse4a,+sse4.1,+sse4.2,+xsave \
-	-serial stdio \
-	-drive format=raw,file=$(image_file)
+	$(QEMU_CMD)
+
+trace: build
+	$(QEMU_CMD) -d in_asm 2>trace.txt
 
 ubsan: ubsan_build qemu64
 

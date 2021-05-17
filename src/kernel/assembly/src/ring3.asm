@@ -57,28 +57,47 @@ jump_usermode:
   mov gs, ax  ; SS is handled by IRET
 
   ; Set up the stack frame IRET expects
-  mov rax, rsp            ; save current rsp
+  mov rax, rsp                    ; save current rsp
 
-  push GDT64_Data_User    ; user data segment selector
-  or qword [rsp], 3       ; RPL
+  push GDT64_Data_User            ; user data segment selector
+  or qword [rsp], 3               ; RPL
 
-  push rax                ; current rsp
+  push rax                        ; current rsp
+  mov [kernel_stack_save], rax
 
-  pushfq                  ; RFLAGS
-  or qword [rsp], 0x200   ; re-enable interrupts (set corresponding flag in RFLAGS)
+  pushfq                          ; RFLAGS
+  or qword [rsp], 0x200           ; re-enable interrupts (set corresponding flag in RFLAGS)
 
-  push GDT64_Code_User    ; user code segment selector
-  or qword [rsp], 3       ; RPL
+  push GDT64_Code_User            ; user code segment selector
+  or qword [rsp], 3               ; RPL
 
-  push user_mode          ; instruction address to return to
+  extern os_entry
+  push os_entry                   ; instruction address to return to
   iretq
 
-; this is executed in ring 3
-user_mode:
-  syscall ; jump to kernel space
-  jmp $   ; infinite loop just to be safe
-
-; this is executed in ring 0
 syscall_handler:
-  ret     ; ret takes us back to enter_user_mode, and thus, to kmain
-  sysret  ; use this to return to user space
+  ; Restore kernel stack pointer
+  mov [user_stack_save], rsp
+  mov rsp, [kernel_stack_save]
+
+  ; Preserve RIP stored by syscall in RCX
+  push rcx
+
+  ; Handle syscall in C
+  extern handle_syscall
+  call handle_syscall
+
+  ; Restore RIP for sysret
+  pop rcx
+
+  ; Restore OS stack pointer
+  mov [kernel_stack_save], rsp
+  mov rsp, [user_stack_save]
+
+  ; Return to ring 3
+  o64 sysret ; the prefix forces 64-bit sysret (sysretq)
+
+section .data
+
+kernel_stack_save:  dq 0
+user_stack_save:    dq 0

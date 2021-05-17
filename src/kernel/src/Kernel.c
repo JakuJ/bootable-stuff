@@ -50,10 +50,7 @@ void kmain() {
 
     enter_user_mode();
 
-    log("Back from ring 3!\n");
-
-    subscribePress(keyPressed);
-    log("\nKeyboard input:\n");
+    log("Back from ring 3 somehow!\n");
 
     // Do not exit from kernel, rather wait for interrupts
     while (true) {
