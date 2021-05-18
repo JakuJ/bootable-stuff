@@ -106,7 +106,7 @@ static void ensure_pages_present(void *vstart, size_t pages) {
 }
 
 typedef struct free_block {
-    void *start;            // starting address of this block
+    void *start;                // starting address of this block
     size_t size;                // block size in pages
     struct free_block *prev;    // pointer to previous block
     struct free_block *next;    // pointer to next block
@@ -271,3 +271,50 @@ void vmm_free_pages(void *start, size_t pages) {
     log("[VMM] Freed %lu pages at %p\n", pages, start);
     print_blockchain();
 }
+
+
+static void set_page_permission(void *addr, uint64_t flags) {
+    uintptr_t virtual = (uintptr_t) addr;
+    unsigned int pt4_index = (virtual >> 39) & 0x1ff;
+    unsigned int pt3_index = (virtual >> 30) & 0x1ff;
+    unsigned int pt2_index = (virtual >> 21) & 0x1ff;
+    unsigned int page_index = (virtual >> 12) & 0x1ff;
+
+    bool interrupts = are_interrupts_enabled();
+    disable_interrupts();
+
+    // Update P4 entry
+    pt4->entries[pt4_index] |= flags;
+
+    // Update P3 entry
+    PT *pt3 = (PT *) (pt4->entries[pt4_index] & ADDRESS_MASK);
+    pt3->entries[pt3_index] |= flags;
+
+    // Update P2 entry
+    PT *pt2 = (PT *) (pt3->entries[pt3_index] & ADDRESS_MASK);
+    pt2->entries[pt2_index] |= flags;
+
+    // Update P1 (page table) entry
+    PT *page_table = (PT *) (pt2->entries[pt2_index] & ADDRESS_MASK);
+    page_table->entries[page_index] |= flags;
+
+    flush_tlb((void *) page_table->entries[page_index]);
+
+    if (interrupts) {
+        enable_interrupts();
+    }
+}
+
+#define SET_OS_PERMISSIONS(X) \
+    extern int _##X##_START_, _##X##_END_; \
+    void* X##_start = (void*)& _##X##_START_; \
+    void* X##_end = (void*)& _##X##_END_; \
+    while (X##_start < X##_end) {set_page_permission(X##_start, USER_SUPERVISOR_MASK); X##_start += PAGE_SIZE;}
+
+void vmm_set_os_page_permissions(void) {
+    SET_OS_PERMISSIONS(OS_TEXT)
+    SET_OS_PERMISSIONS(OS_DATA)
+    SET_OS_PERMISSIONS(OS_BSS)
+}
+
+#undef SET_OS_PERMISSIONS

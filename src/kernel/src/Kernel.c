@@ -6,6 +6,7 @@
 #include <KbController.h>
 #include <Ring3.h>
 #include <stdnoreturn.h>
+#include <memory/VMM.h>
 
 void keyPressed(char c, unsigned char code) {
     if (c) {
@@ -47,6 +48,7 @@ noreturn void kmain() {
 
     log("Entering ring 3...\n");
 
+    vmm_set_os_page_permissions();
     enable_interrupts();
     enter_user_mode();
 
