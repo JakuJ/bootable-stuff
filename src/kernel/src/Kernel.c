@@ -3,30 +3,10 @@
 #include <PIC.h>
 #include <IDT.h>
 #include <Diagnostics.h>
-#include <KbController.h>
 #include <Ring3.h>
 #include <stdnoreturn.h>
 #include <memory/VMM.h>
 
-void keyPressed(char c, unsigned char code) {
-    if (c) {
-        log("%c", c);
-    } else {
-        switch (code) {
-            case 28:
-                log("\n");
-                break;
-            case 14:
-                log("\b");
-                break;
-            default:
-                log("<%d>", code);
-                break;
-        }
-    }
-}
-
-// Kernel entry point
 noreturn void kmain() {
     // Initialize resources
     vga_init();
@@ -48,7 +28,7 @@ noreturn void kmain() {
 
     log("Entering ring 3...\n");
 
-    vmm_set_os_page_permissions();
+    vmm_set_page_permissions();
     enable_interrupts();
     enter_user_mode();
 

@@ -4,17 +4,20 @@
 #include <lib/memory.h>
 
 // TODO: Respect the memory map
-#define RESERVED_START  0x100000
 #define MEM_START       0x200000
 #define PAGE_SIZE       4096
 
 // Page manager sees 128MB of RAM
 #define PAGES (128 * 4)
 
+extern int _FIRST_FREE_PAGE_;
+
 uint64_t bitmap[PAGES];
+uintptr_t RESERVED_START;
 
 __attribute__((constructor))
 static void pmm_init(void) {
+    RESERVED_START = (uintptr_t)&_FIRST_FREE_PAGE_;
     kmemset(bitmap, 0xff, sizeof(bitmap));
 }
 

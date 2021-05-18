@@ -22,9 +22,10 @@ extern GDT64_Pointer
 
 lgdt [GDT32_Pointer]
 
-; Set PE (Protection Enable) bit in CR0 (Control Register 0)
+; Set bits in CR0 (Control Register 0)
 mov eax, cr0
-or al, 1
+or eax, 1        ; set PE (Protection Enable) bit
+or eax, 1 << 16  ; set WP (Write protect) bit
 mov cr0, eax
 
 ; Set the remaining segments to point at the data segment

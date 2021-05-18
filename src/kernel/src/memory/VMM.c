@@ -5,15 +5,21 @@
 #include <Interrupts.h>
 #include <lib/memory.h>
 
-#define ADDRESS_MASK            0xffffffffff000
-#define AVAILABLE_MASK          0xe00
-#define PAGE_SIZE_MASK          0x80
-#define ACCESSED_MASK           0x20
-#define CACHE_DISABLED_MASK     0x10
-#define WRITE_THROUGH_MASK      0x8
-#define USER_SUPERVISOR_MASK    0x4
-#define READ_WRITE_MASK         0x2
-#define PRESENT_MASK            0x1
+#define NO_EXEC_BIT            (1UL << 63)
+#define ADDRESS_MASK           0xfffffff000
+#define IGNORED_2              0xf00
+#define GLOBAL_PAGE_BIT        0x100
+#define PAGE_SIZE_BIT          0x80
+#define IGNORED_1              0x40
+#define DIRTY_PAGE_BIT         0x40
+#define ACCESSED_BIT           0x20
+#define CACHE_DISABLED_BIT     0x10
+#define WRITE_THROUGH_BIT      0x8
+#define USER_ACCESS_BIT        0x4
+#define READ_WRITE_BIT         0x2
+#define PRESENT_BIT            0x1
+
+#define DIRECTORY_DEFAULTS    (READ_WRITE_BIT | PRESENT_BIT)
 
 // Kernel heap starts at 2MB virtual
 #define HEAP_START              0x200000
@@ -53,43 +59,43 @@ void vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
     disable_interrupts();
 
     // Check P4 entry
-    if (!(pt4->entries[pt4_index] & PRESENT_MASK)) {
+    if (!(pt4->entries[pt4_index] & PRESENT_BIT)) {
         // Create new P3 table
         PT *pt3 = allocate_page_table();
 
         // Point P4 entry to that P3 table
-        pt4->entries[pt4_index] = (uint64_t) pt3 | 0x3; // read/write, present
+        pt4->entries[pt4_index] = (uint64_t) pt3 | DIRECTORY_DEFAULTS;
     }
 
     // Check P3 entry
     PT *pt3 = (PT *) (pt4->entries[pt4_index] & ADDRESS_MASK);
-    if (!(pt3->entries[pt3_index] & PRESENT_MASK)) {
+    if (!(pt3->entries[pt3_index] & PRESENT_BIT)) {
         // Create new P2 table
         PT *pt2 = allocate_page_table();
 
         // Point P3 entry to that P2 table
-        pt3->entries[pt3_index] = (uint64_t) pt2 | 0x3; // read/write, present
+        pt3->entries[pt3_index] = (uint64_t) pt2 | DIRECTORY_DEFAULTS;
     }
 
     // Check P2 entry
     PT *pt2 = (PT *) (pt3->entries[pt3_index] & ADDRESS_MASK);
-    if (!(pt2->entries[pt2_index] & PRESENT_MASK)) {
+    if (!(pt2->entries[pt2_index] & PRESENT_BIT)) {
         // Create new P1 table
         PT *page_table = allocate_page_table();
 
         // Point P2 entry to that P1 table
-        pt2->entries[pt2_index] = (uint64_t) page_table | 0x3; // read/write, present
+        pt2->entries[pt2_index] = (uint64_t) page_table | DIRECTORY_DEFAULTS;
     }
 
     // Check P1 (page table) entry
     PT *page_table = (PT *) (pt2->entries[pt2_index] & ADDRESS_MASK);
-    if (!(page_table->entries[page_index] & PRESENT_MASK)) {
+    if (!(page_table->entries[page_index] & PRESENT_BIT)) {
         // Map page to address
         if (!physical) {
             physical = (uintptr_t) pmm_allocate_page();
         }
 
-        page_table->entries[page_index] = physical | 0x3; // read/write, present
+        page_table->entries[page_index] = physical | DIRECTORY_DEFAULTS | NO_EXEC_BIT;
 
         flush_tlb((void *) physical);
     }
@@ -272,8 +278,7 @@ void vmm_free_pages(void *start, size_t pages) {
     print_blockchain();
 }
 
-
-static void set_page_permission(void *addr, uint64_t flags) {
+static void set_page_permission(void *addr, bool is_os, bool is_writable, bool is_executable) {
     uintptr_t virtual = (uintptr_t) addr;
     unsigned int pt4_index = (virtual >> 39) & 0x1ff;
     unsigned int pt3_index = (virtual >> 30) & 0x1ff;
@@ -283,20 +288,32 @@ static void set_page_permission(void *addr, uint64_t flags) {
     bool interrupts = are_interrupts_enabled();
     disable_interrupts();
 
+#define SET_FLAGS(X) X = ((X) & ADDRESS_MASK) | DIRECTORY_DEFAULTS | (is_os ? USER_ACCESS_BIT : 0);
+
     // Update P4 entry
-    pt4->entries[pt4_index] |= flags;
+    SET_FLAGS(pt4->entries[pt4_index])
 
     // Update P3 entry
     PT *pt3 = (PT *) (pt4->entries[pt4_index] & ADDRESS_MASK);
-    pt3->entries[pt3_index] |= flags;
+    SET_FLAGS(pt3->entries[pt3_index])
 
     // Update P2 entry
     PT *pt2 = (PT *) (pt3->entries[pt3_index] & ADDRESS_MASK);
-    pt2->entries[pt2_index] |= flags;
+    SET_FLAGS(pt2->entries[pt2_index])
 
     // Update P1 (page table) entry
     PT *page_table = (PT *) (pt2->entries[pt2_index] & ADDRESS_MASK);
-    page_table->entries[page_index] |= flags;
+
+    SET_FLAGS(page_table->entries[page_index])
+
+#undef SET_FLAGS
+
+    if (!is_executable) {
+        page_table->entries[page_index] |= NO_EXEC_BIT;
+    }
+    if (!is_writable) {
+        page_table->entries[page_index] &= ~READ_WRITE_BIT;
+    }
 
     flush_tlb((void *) page_table->entries[page_index]);
 
@@ -305,16 +322,30 @@ static void set_page_permission(void *addr, uint64_t flags) {
     }
 }
 
-#define SET_OS_PERMISSIONS(X) \
-    extern int _##X##_START_, _##X##_END_; \
-    void* X##_start = (void*)& _##X##_START_; \
-    void* X##_end = (void*)& _##X##_END_; \
-    while (X##_start < X##_end) {set_page_permission(X##_start, USER_SUPERVISOR_MASK); X##_start += PAGE_SIZE;}
+#define SET_PERMISSIONS(X, is_os, is_writable, is_executable) \
+    extern int _##X##_START_[], _##X##_END_[]; \
+    void *X##_start = (void *) _##X##_START_; \
+    while (X##_start < (void *) _##X##_END_) {set_page_permission(X##_start, is_os, is_writable, is_executable); X##_start += PAGE_SIZE;}
 
-void vmm_set_os_page_permissions(void) {
-    SET_OS_PERMISSIONS(OS_TEXT)
-    SET_OS_PERMISSIONS(OS_DATA)
-    SET_OS_PERMISSIONS(OS_BSS)
+void vmm_set_page_permissions(void) {
+    SET_PERMISSIONS(BOOT, false, true, true)
+
+    // Special case for whatever resides below the boot sector
+    void *lowspace = NULL;
+    while (lowspace < BOOT_start) {
+        set_page_permission(lowspace, false, true, true);
+        lowspace += PAGE_SIZE;
+    }
+
+    SET_PERMISSIONS(TEXT, false, false, true)
+    SET_PERMISSIONS(RODATA, false, false, false)
+    SET_PERMISSIONS(DATA, false, true, false)
+    SET_PERMISSIONS(BSS, false, true, false)
+
+    SET_PERMISSIONS(OS_TEXT, true, false, true)
+    SET_PERMISSIONS(OS_RODATA, true, false, false)
+    SET_PERMISSIONS(OS_DATA, true, true, false)
+    SET_PERMISSIONS(OS_BSS, true, true, false)
 }
 
-#undef SET_OS_PERMISSIONS
+#undef SET_PERMISSIONS

@@ -12,7 +12,7 @@ CFLAGS += -mno-red-zone -fno-asynchronous-unwind-tables
 CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/os/include
 
-LDFLAGS = -n -T linker.ld
+LDFLAGS = -n -Map=map.txt -T linker.ld
 
 # Source files and corresponding object files
 kernel_asm_sources = $(shell find src/kernel/assembly/src -name *.asm)

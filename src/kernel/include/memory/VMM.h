@@ -12,4 +12,4 @@ void vmm_free_pages(void *start, size_t pages);
 
 void vmm_map_memory(uintptr_t physical, uintptr_t virtual);
 
-void vmm_set_os_page_permissions(void);
+void vmm_set_page_permissions(void);

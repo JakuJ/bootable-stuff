@@ -1,5 +1,6 @@
 #include <Diagnostics.h>
 #include <VGA/VGA.h>
+#include <stdint.h>
 
 #define btoa(x) ((x) ? "true" : "false")
 
@@ -7,28 +8,32 @@ extern int query_cpu(unsigned int page, int reg_no, int bit);
 
 extern void enable_avx(void);
 
-extern int linker_first_free_page;
+extern uintptr_t _FIRST_FREE_PAGE_[];
 
 void section_info(void) {
 
 #define PRINT_SECTION(X) \
-    extern int _##X##_START_, _##X##_END_; \
-    log("\t" #X ":\t%lu bytes\t%lu - %lu\t(%p - %p)\n", \
-    (unsigned long)&_##X##_END_ - (unsigned long)&_##X##_START_, \
-    (unsigned long)(&_##X##_START_), (unsigned long)(&_##X##_END_), (void*)&_##X##_START_, (void*)&_##X##_END_);
+    extern uintptr_t _##X##_START_[], _##X##_END_[]; \
+    uintptr_t X##e = (uintptr_t)_##X##_END_, X##s = (uintptr_t) _##X##_START_; \
+    log("\t" #X ":\t%lu bytes\t%lu - %lu\t(%lx - %lx)\n", X##e - X##s, X##s, X##e, X##s, X##e);
 
     log("Image section sizes:\n");
     PRINT_SECTION(BOOT)
     log("\n");
     PRINT_SECTION(TEXT)
+    PRINT_SECTION(RODATA)
     PRINT_SECTION(DATA)
     log("\n");
     PRINT_SECTION(OS_TEXT)
+    PRINT_SECTION(OS_RODATA)
     PRINT_SECTION(OS_DATA)
     log("\n");
     PRINT_SECTION(BSS)
     PRINT_SECTION(OS_BSS)
-    log("\n\tFirst free page: %p\n", (void *) &linker_first_free_page);
+
+#undef PRINT_SECTION
+
+    log("\n\tFirst free page at: %lx\n", (uintptr_t) _FIRST_FREE_PAGE_);
 }
 
 void sse_info(void) {
