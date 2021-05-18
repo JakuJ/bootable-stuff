@@ -1,4 +1,4 @@
-#include <string.h>
+#include <lib/string.h>
 
 static char *itoa_rec(unsigned long num, char *buffer, int base) {
     if (num > 0) {

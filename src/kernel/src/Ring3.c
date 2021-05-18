@@ -1,7 +1,6 @@
 #include <Ring3.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <VGA/VGA.h>
 
 typedef struct {
     uint32_t reserved1;

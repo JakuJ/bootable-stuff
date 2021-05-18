@@ -12,9 +12,7 @@ SECTIONS {
     {
         _TEXT_START_ = .;
         build/kernel/*(.text)
-        build/libc/*(.text)
         build/kernel/*(.rodata)
-        build/libc/*(.rodata)
         _TEXT_END_ = .;
     }
     kernel_data : ALIGN(4K)
@@ -22,7 +20,6 @@ SECTIONS {
         _DATA_START_ = .;
         build/boot/*(.data)
         build/kernel/*(.data)
-        build/libc/*(.data)
         _DATA_END_ = .;
     }
     os_text : ALIGN(4K)

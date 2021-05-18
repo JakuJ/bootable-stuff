@@ -1,11 +1,11 @@
 #include <stdint.h>
-#include <string.h>
+#include <lib/string.h>
 #include <VGA/VGA.h>
 #include <memory/VMM.h>
 #include <VGA/Font.h>
 #include <PortIO.h>
-#include <liballoc_1_1.h>
-#include <memory.h>
+#include <lib/liballoc_1_1.h>
+#include <lib/memory.h>
 
 #define TAB_SIZE 4
 #define PIXEL uint32_t

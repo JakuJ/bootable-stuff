@@ -1,4 +1,4 @@
-#include <string.h>
+#include <lib/string.h>
 
 char *strcpy(char *to, const char *from) {
     while (*from) {

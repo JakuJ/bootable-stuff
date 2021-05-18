@@ -1,7 +1,7 @@
 #include <memory/PMM.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <memory.h>
+#include <lib/memory.h>
 
 // TODO: Respect the memory map
 #define RESERVED_START  0x100000

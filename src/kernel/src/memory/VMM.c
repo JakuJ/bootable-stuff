@@ -1,9 +1,9 @@
 #include <memory/VMM.h>
 #include <memory/PMM.h>
 #include <VGA/VGA.h>
-#include <liballoc_1_1.h>
+#include <lib/liballoc_1_1.h>
 #include <Interrupts.h>
-#include <memory.h>
+#include <lib/memory.h>
 
 #define ADDRESS_MASK            0xffffffffff000
 #define AVAILABLE_MASK          0xe00

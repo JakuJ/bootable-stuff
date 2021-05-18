@@ -14,8 +14,6 @@ flush_tss:
 
 global jump_usermode
 jump_usermode:
-  cli
-
   ; Enable the SYSCALL instruction in the EFER MSR
   mov ecx, 0xc0000080
   rdmsr
@@ -44,43 +42,41 @@ jump_usermode:
 
   ; Setup SFMASK MSR
   mov ecx, 0xc0000084
-  xor eax, eax
+  mov eax, 0x200                ; mask interrupts
   xor edx, edx
   wrmsr
 
-  ; Set segment registers to ring 3 data
+  ; Set segment registers for ring 3
   mov ax, GDT64_Data_User
-  or ax, 3    ; RPL
+  or ax, 3
   mov ds, ax
   mov es, ax
   mov fs, ax
-  mov gs, ax  ; SS is handled by IRET
+  mov gs, ax                    ; SS is handled by IRET
 
-  ; Set up the stack frame IRET expects
-  mov rax, rsp                    ; save current rsp
+  ; Jump to ring 3
+  cli                           ; we don't want interrupts handled on the user stack
 
-  push GDT64_Data_User            ; user data segment selector
-  or qword [rsp], 3               ; RPL
+  pushf                         ; leave EFLAGS unchanged
+  pop r11
 
-  push rax                        ; current rsp
-  mov [kernel_stack_save], rax
-
-  pushfq                          ; RFLAGS
-  or qword [rsp], 0x200           ; re-enable interrupts (set corresponding flag in RFLAGS)
-
-  push GDT64_Code_User            ; user code segment selector
-  or qword [rsp], 3               ; RPL
+  mov [kernel_stack_save], rsp  ; load the user stack pointer
+  mov rsp, [user_stack_save]
 
   extern os_entry
-  push os_entry                   ; instruction address to return to
-  iretq
+  mov rcx, os_entry             ; set the RIP after sysret to OS entry point
+
+  o64 sysret                    ; the prefix forces 64-bit sysret (sysretq)
 
 syscall_handler:
   ; Restore kernel stack pointer
   mov [user_stack_save], rsp
   mov rsp, [kernel_stack_save]
 
-  ; Preserve RIP stored by syscall in RCX
+  ; Preserve EFLAGS stored in R11
+  push r11
+
+  ; Preserve RIP stored in RCX
   push rcx
 
   ; Handle syscall in C
@@ -90,12 +86,15 @@ syscall_handler:
   ; Restore RIP for sysret
   pop rcx
 
+  ; sysret will restore from r11 EFLAGS
+  pop r11 ; TODO: interrupts in ring 3 cause #GP pointing to the TSS
+
   ; Restore OS stack pointer
   mov [kernel_stack_save], rsp
   mov rsp, [user_stack_save]
 
   ; Return to ring 3
-  o64 sysret ; the prefix forces 64-bit sysret (sysretq)
+  o64 sysret
 
 section .data
 

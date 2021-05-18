@@ -1,4 +1,4 @@
-#include <string.h>
+#include <lib/string.h>
 
 void vsprintf(char *buffer, char const *fmt, va_list arg) {
     char ch;

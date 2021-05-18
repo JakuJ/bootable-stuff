@@ -3,7 +3,7 @@
 #include <KbController.h>
 #include <VGA/VGA.h>
 #include <Interrupts.h>
-#include <macro_foreach.h>
+#include <lib/macro_foreach.h>
 
 #define KBD_DATA_PORT       0x60
 #define KBD_SCANCODE_MASK   0x7f
@@ -115,9 +115,9 @@ void isr_handler(const ISR_Frame regs) {
     log("R12: %lx | R13: %lx | R14: %lx | R15: %lx\n", regs.r12, regs.r13, regs.r14, regs.r15);
 
     log("Stack trace:\n");
-    uint64_t* stack_top = (uint64_t *) (uintptr_t) regs.sp;
+    uint64_t *stack_top = (uint64_t *) (uintptr_t) regs.sp;
     for (int i = 0; i < 10; i++) {
-        log("%p | %lx\n", (void*)(stack_top + i), stack_top[i]);
+        log("%p | %lx\n", (void *) (stack_top + i), stack_top[i]);
     }
 
     while (true);
@@ -126,7 +126,7 @@ void isr_handler(const ISR_Frame regs) {
 void irq0_handler(void) {
     static unsigned long clock = 0;
     PIC_send_EOI(0);
-    clock++;
+    log("Clock: %lu\n", clock++);
 }
 
 void irq1_handler(void) {

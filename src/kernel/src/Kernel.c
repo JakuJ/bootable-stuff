@@ -5,6 +5,7 @@
 #include <Diagnostics.h>
 #include <KbController.h>
 #include <Ring3.h>
+#include <stdnoreturn.h>
 
 void keyPressed(char c, unsigned char code) {
     if (c) {
@@ -25,7 +26,7 @@ void keyPressed(char c, unsigned char code) {
 }
 
 // Kernel entry point
-void kmain() {
+noreturn void kmain() {
     // Initialize resources
     vga_init();
 
@@ -44,10 +45,9 @@ void kmain() {
     sse_info();
     log("\n");
 
-    enable_interrupts();
-
     log("Entering ring 3...\n");
 
+    enable_interrupts();
     enter_user_mode();
 
     log("Back from ring 3 somehow!\n");

@@ -10,7 +10,7 @@ CFLAGS += -Wno-pointer-arith
 CFLAGS += -nostdlib -ffreestanding -fno-pie
 CFLAGS += -mno-red-zone -fno-asynchronous-unwind-tables
 CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
-CFLAGS += -I src/kernel/include -I src/libc/include -I src/os/include
+CFLAGS += -I src/kernel/include -I src/os/include
 
 LDFLAGS = -n -T linker.ld
 
@@ -21,9 +21,6 @@ kernel_asm_objects = $(patsubst src/kernel/assembly/src/%.asm, build/kernel/asse
 kernel_c_sources = $(shell find src/kernel/src -name *.c)
 kernel_objects = $(patsubst src/kernel/src/%.c, build/kernel/%.o, $(kernel_c_sources))
 
-libc_c_sources = $(shell find src/libc/src -name *.c)
-libc_objects = $(patsubst src/libc/src/%.c, build/libc/%.o, $(libc_c_sources))
-
 os_asm_sources = $(shell find src/os/assembly/src -name *.asm)
 os_asm_objects = $(patsubst src/os/assembly/src/%.asm, build/os/assembly/%.o, $(os_asm_sources))
 
@@ -31,7 +28,6 @@ os_c_sources = $(shell find src/os/src -name *.c)
 os_objects = $(patsubst src/os/src/%.c, build/os/%.o, $(os_c_sources))
 
 kernel_headers = $(shell find src/kernel/include -name *.h)
-libc_headers = $(shell find src/libc/include -name *.h)
 os_headers = $(shell find src/os/include -name *.h)
 
 boot_includes = $(shell find src/boot/include -name *.asm)
@@ -46,7 +42,7 @@ crtend_obj = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 
 bootloader_objs := $(filter-out $(crti_obj) $(crtn_obj),$(bootloader_objs))
 
-all_objects = $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(libc_objects) $(os_asm_objects) $(os_objects)
+all_objects = $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(os_asm_objects) $(os_objects)
 obj_link_list = $(crti_obj) $(crtbegin_obj) $(all_objects) $(crtend_obj) $(crtn_obj)
 
 image_file = build/image.bin
@@ -75,10 +71,6 @@ $(kernel_objects): build/kernel/%.o : src/kernel/src/%.c $(kernel_headers)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(os_objects): build/os/%.o : src/os/src/%.c $(os_headers)
-	mkdir -p $(dir $@) && \
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-$(libc_objects): build/libc/%.o : src/libc/src/%.c $(libc_headers)
 	mkdir -p $(dir $@) && \
 	$(CC) -c -o $@ $< $(CFLAGS)
 

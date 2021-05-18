@@ -1,4 +1,4 @@
-#include <math.h>
+#include <lib/math.h>
 
 int ipow(int value, int power) {
     if (power <= 0) return 1;

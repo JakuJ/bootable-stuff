@@ -1,5 +1,5 @@
-#include <string.h>
-#include <math.h>
+#include <lib/string.h>
+#include <lib/math.h>
 
 char *gcvt(double value, int ndigits, char *buf) {
     if (value < 0) {
