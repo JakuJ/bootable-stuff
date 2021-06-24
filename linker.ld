@@ -39,18 +39,21 @@ SECTIONS {
     {
         _OS_TEXT_START_ = .;
         build/os/*(.text*)
+        external/musl-1.2.2/lib/libc.a(.text*)
         _OS_TEXT_END_ = .;
     }
     os_rodata : ALIGN(4K)
     {
         _OS_RODATA_START_ = .;
         build/os/*(.rodata*)
+        external/musl-1.2.2/lib/libc.a(.rodata*)
         _OS_RODATA_END_ = .;
     }
     os_data : ALIGN(4K)
     {
         _OS_DATA_START_ = .;
         build/os/*(.data)
+        external/musl-1.2.2/lib/libc.a(.data*)
         _OS_DATA_END_ = .;
     }
     kernel_bss : ALIGN(4K)
@@ -65,12 +68,14 @@ SECTIONS {
     {
         _OS_BSS_START_ = .;
         build/os/*(.bss)
+        external/musl-1.2.2/lib/libc.a(.bss*)
         _OS_BSS_END_ = .;
     }
     /DISCARD/ :
     {
-      *(.comment)
-      *(.eh_frame)
+      *(.comment*)
+      *(.eh_frame*)
+      *(.note*)
     }
     _FIRST_FREE_PAGE_ = ALIGN(4K);
 }

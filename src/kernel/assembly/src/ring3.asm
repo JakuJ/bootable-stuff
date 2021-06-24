@@ -1,5 +1,7 @@
 section .text
 
+%include "src/kernel/assembly/include/push_all.asm"
+
 extern GDT64_TSS
 extern GDT64_Code
 extern GDT64_Code_User
@@ -79,9 +81,18 @@ syscall_handler:
   ; Preserve RIP stored in RCX
   push rcx
 
+  ; C ABI callee-preserved registers
+  push_all
+
+  ; musl's syscall places arg 4 in r10
+  mov rcx, r10
+
   ; Handle syscall in C
   extern handle_syscall
   call handle_syscall
+
+  ; Restore C ABI callee-preserved registers
+  pop_all
 
   ; Restore RIP for sysret
   pop rcx
