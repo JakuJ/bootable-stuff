@@ -4,6 +4,9 @@ CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
 OBJCOPY = x86_64-elf-objcopy
 
+# Constants
+PORTS_DIR = ports
+
 # Common flags
 COM_FLAGS = -std=gnu18 -masm=intel
 COM_FLAGS += -O3 -Wall -Wextra -Wpedantic -Wstrict-aliasing -fanalyzer
@@ -17,8 +20,8 @@ KER_FLAGS = $(COM_FLAGS) -I src/kernel/include
 
 # OS flags
 OS_FLAGS = $(COM_FLAGS) -I src/os/include
-OS_FLAGS += -I external/musl-1.2.2/include -I external/musl-1.2.2/obj/include
-OS_FLAGS += -I external/musl-1.2.2/arch/x86_64 -I external/musl-1.2.2/arch/generic
+OS_FLAGS += -I $(PORTS_DIR)/musl-1.2.2/include -I $(PORTS_DIR)/musl-1.2.2/obj/include
+OS_FLAGS += -I $(PORTS_DIR)/musl-1.2.2/arch/x86_64 -I $(PORTS_DIR)/musl-1.2.2/arch/generic
 
 KERNEL_LDFLAGS = -n -Map=map_kernel.txt -T linker_kernel.ld
 OS_LDFLAGS = -n -Map=map_os.txt -T linker_os.ld
@@ -36,7 +39,7 @@ os_asm_objects = $(patsubst src/os/assembly/src/%.asm, build/os/assembly/%.o, $(
 
 os_c_sources = $(shell find src/os/src -name *.c)
 os_objects = $(patsubst src/os/src/%.c, build/os/%.o, $(os_c_sources))
-musl_object = external/musl-1.2.2/lib/libc.a
+musl_object = $(PORTS_DIR)/musl-1.2.2/lib/libc.a
 
 kernel_headers = $(shell find src/kernel/include -name *.h)
 os_headers = $(shell find src/os/include -name *.h)
@@ -91,7 +94,7 @@ $(os_objects): build/os/%.o : src/os/src/%.c $(os_headers)
 	$(CC) -c -o $@ $< $(OS_FLAGS)
 
 $(musl_object):
-	( cd external/musl-1.2.2 && \
+	( cd $(PORTS_DIR)/musl-1.2.2 && \
 		CROSS_COMPILE=x86_64-elf- CC=x86_64-elf-gcc ./configure --target=x86_64 --disable-shared && \
 		make -j )
 
