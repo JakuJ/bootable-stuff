@@ -18,15 +18,6 @@ typedef struct {
     unsigned cursorY;
 } VGA;
 
-typedef struct {
-    uint16_t width, height;
-    uint8_t bpp;
-    uint32_t physical_buffer;
-    uint32_t bytes_per_pixel;
-    uint16_t bytes_per_line;
-    uint16_t x_cur_max, y_cur_max;
-} __attribute__((packed)) vbe_screen_info;
-
 extern vbe_screen_info vbe_info;
 
 PIXEL *FRAMEBUFFER, *BACKBUFFER, *BACKGROUND;
@@ -192,6 +183,14 @@ void log(const char *fmt, ...) {
 
     swapBuffers();
     va_end(arg);
+}
+
+void log_n(char *buf, size_t n) {
+    for (size_t i = 0; i < n; i++) {
+        putChar(buf[i]);
+    }
+
+    swapBuffers();
 }
 
 void vga_info(void) {
