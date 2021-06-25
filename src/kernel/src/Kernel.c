@@ -22,11 +22,8 @@ noreturn void kmain() {
     vga_info();
     log("\n");
     section_info();
-    log("\n");
-    sse_info();
-    log("\n");
 
-    log("Entering ring 3...\n");
+    log("\nEntering ring 3...\n");
 
     vmm_set_page_permissions();
     enable_interrupts();

@@ -19,8 +19,7 @@ Make sure you have the required dependencies:
 Then
 
 ```shell
-make qemu64   # anywhere
-make hvf      # on MacOS
+make -j qemu64   # anywhere
 ```
 
 to build the image and boot it in QEMU.
@@ -31,6 +30,7 @@ to build the image and boot it in QEMU.
     - [x] Protected mode
     - [x] Long mode
     - [x] Enabling SSE, AVX*
+    - [ ] Loading arbitrarily large images
 - VGA controller
     - [x] Printing text to the screen
     - [x] Setting VESA modes automatically
@@ -48,8 +48,11 @@ to build the image and boot it in QEMU.
 - Operating system
     - [x] Getting to ring 3
     - [x] Handling `syscall`
-    - [ ] A functional syscall ABI
-
+    - [x] Porting a libc ([musl](http://musl.libc.org))
+    - [ ] Porting a window manager
+    - [ ] Porting some OpenGL implementation
+    - [ ] Porting DOOM
+    - [ ] Finally choosing a name for the OS
 # Caveats
 
 ### AVX support

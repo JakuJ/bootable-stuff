@@ -1,6 +1,17 @@
-#include <syscall.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 
-void os_main(void) {
-    syscall(0xdead);
-    syscall(0xbabe);
+int os_main(void) {
+    printf("Sending a syscall without a handler...\n\n");
+
+    int ret = syscall(9, 10, 11, 12, 13, 14, 15); // TODO: long return type wraps around
+
+    char buf[100] = {0};
+    snprintf(buf, 100, "Got: %d from syscall 9\n\n", ret);
+
+    write(1, buf, strlen(buf));
+
+    printf("Fun fact: musl's [%s] uses [%s]\n", "printf", "the 'writev' syscall");
+    return 0;
 }

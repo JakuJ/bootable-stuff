@@ -337,10 +337,10 @@ void vmm_set_page_permissions(void) {
         lowspace += PAGE_SIZE;
     }
 
-    SET_PERMISSIONS(TEXT, false, false, true)
-    SET_PERMISSIONS(RODATA, false, false, false)
-    SET_PERMISSIONS(DATA, false, true, false)
-    SET_PERMISSIONS(BSS, false, true, false)
+    SET_PERMISSIONS(KERNEL_TEXT, false, false, true)
+    SET_PERMISSIONS(KERNEL_RODATA, false, false, false)
+    SET_PERMISSIONS(KERNEL_DATA, false, true, false)
+    SET_PERMISSIONS(KERNEL_BSS, false, true, false)
 
     SET_PERMISSIONS(OS_TEXT, true, false, true)
     SET_PERMISSIONS(OS_RODATA, true, false, false)

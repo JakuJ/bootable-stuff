@@ -2,16 +2,29 @@
 AS = nasm -f elf64
 CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
+OBJCOPY = x86_64-elf-objcopy
 
-# Flags
-CFLAGS = -std=gnu18 -masm=intel
-CFLAGS += -O3 -Wall -Wextra -Wpedantic -Wstrict-aliasing -fanalyzer
-CFLAGS += -Wno-pointer-arith
-CFLAGS += -nostdlib -ffreestanding -fno-pie
-CFLAGS += -mno-red-zone -fno-asynchronous-unwind-tables
-CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
-CFLAGS += -I src/kernel/include -I src/os/include
+# Constants
+PORTS_DIR = ports
 
+# Common flags
+COM_FLAGS = -std=gnu18 -masm=intel
+COM_FLAGS += -O3 -Wall -Wextra -Wpedantic -Wstrict-aliasing -fanalyzer
+COM_FLAGS += -Wno-pointer-arith
+COM_FLAGS += -nostdlib -ffreestanding -fvisibility=hidden
+COM_FLAGS += -mno-red-zone -fno-asynchronous-unwind-tables
+COM_FLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
+
+# Kernel flags
+KER_FLAGS = $(COM_FLAGS) -I src/kernel/include
+
+# OS flags
+OS_FLAGS = $(COM_FLAGS) -I src/os/include
+OS_FLAGS += -I $(PORTS_DIR)/musl-1.2.2/include -I $(PORTS_DIR)/musl-1.2.2/obj/include
+OS_FLAGS += -I $(PORTS_DIR)/musl-1.2.2/arch/x86_64 -I $(PORTS_DIR)/musl-1.2.2/arch/generic
+
+KERNEL_LDFLAGS = -n -Map=map_kernel.txt -T linker_kernel.ld
+OS_LDFLAGS = -n -Map=map_os.txt -T linker_os.ld
 LDFLAGS = -n -Map=map.txt -T linker.ld
 
 # Source files and corresponding object files
@@ -26,6 +39,7 @@ os_asm_objects = $(patsubst src/os/assembly/src/%.asm, build/os/assembly/%.o, $(
 
 os_c_sources = $(shell find src/os/src -name *.c)
 os_objects = $(patsubst src/os/src/%.c, build/os/%.o, $(os_c_sources))
+musl_object = $(PORTS_DIR)/musl-1.2.2/lib/libc.a
 
 kernel_headers = $(shell find src/kernel/include -name *.h)
 os_headers = $(shell find src/os/include -name *.h)
@@ -37,44 +51,64 @@ bootloader_objs = $(patsubst src/boot/src/%.asm, build/boot/%.o, $(bootloader_so
 # Global constructor support
 crti_obj = build/boot/crti.o
 crtn_obj = build/boot/crtn.o
-crtbegin_obj = $(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
-crtend_obj = $(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
+crtbegin_obj = $(shell $(CC) $(KER_FLAGS) -print-file-name=crtbegin.o)
+crtend_obj = $(shell $(CC) $(KER_FLAGS) -print-file-name=crtend.o)
 
 bootloader_objs := $(filter-out $(crti_obj) $(crtn_obj),$(bootloader_objs))
 
-all_objects = $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(os_asm_objects) $(os_objects)
-obj_link_list = $(crti_obj) $(crtbegin_obj) $(all_objects) $(crtend_obj) $(crtn_obj)
+os_link_list = $(os_asm_objects) $(os_objects) $(musl_object)
+os_object = build/os.o
+
+kernel_link_list = $(crti_obj) $(crtbegin_obj) $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(crtend_obj) $(crtn_obj)
+kernel_object = build/kernel.o
 
 image_file = build/image.bin
 
 # General build targets
-build: $(image_file) count_sectors
+build: $(kernel_binary) $(os_binary) count_sectors
 
-ubsan_build: CFLAGS += -Os -fsanitize=undefined
+ubsan_build: COM_FLAGS += -Os -fsanitize=undefined
 ubsan_build: clean build
 
-# Object file targets
+# OBJECT FILES - BOOT
 $(bootloader_objs) $(crti_obj) $(crtn_obj) : build/boot/%.o : src/boot/src/%.asm $(boot_includes)
 	mkdir -p $(dir $@) && \
 	$(AS) -o $@ $<
 
+# OBJECT FILES - KERNEL
 $(kernel_asm_objects): build/kernel/assembly/%.o : src/kernel/assembly/src/%.asm
 	mkdir -p $(dir $@) && \
 	$(AS) $(patsubst build/kernel/assembly/%.o, src/kernel/assembly/src/%.asm, $@) -o $@
 
+$(kernel_objects): build/kernel/%.o : src/kernel/src/%.c $(kernel_headers)
+	mkdir -p $(dir $@) && \
+	$(CC) -c -o $@ $< $(KER_FLAGS)
+
+# OBJECT FILES - OS
 $(os_asm_objects): build/os/assembly/%.o : src/os/assembly/src/%.asm
 	mkdir -p $(dir $@) && \
 	$(AS) $(patsubst build/os/assembly/%.o, src/os/assembly/src/%.asm, $@) -o $@
 
-$(kernel_objects): build/kernel/%.o : src/kernel/src/%.c $(kernel_headers)
-	mkdir -p $(dir $@) && \
-	$(CC) -c -o $@ $< $(CFLAGS)
-
 $(os_objects): build/os/%.o : src/os/src/%.c $(os_headers)
 	mkdir -p $(dir $@) && \
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(OS_FLAGS)
 
-$(image_file): $(obj_link_list)
+$(musl_object):
+	( cd $(PORTS_DIR)/musl-1.2.2 && \
+		CROSS_COMPILE=x86_64-elf- CC=x86_64-elf-gcc ./configure --target=x86_64 --disable-shared && \
+		make -j )
+
+# BINARIES - OS
+
+$(kernel_object): $(kernel_link_list)
+	$(LD) -r -o $@ $^ $(KERNEL_LDFLAGS) && \
+	$(OBJCOPY) --localize-hidden $@
+
+$(os_object): $(os_link_list)
+	$(LD) -r -o $@ $^ $(OS_LDFLAGS) && \
+	$(OBJCOPY) --localize-hidden $@
+
+$(image_file): $(kernel_object) $(os_object)
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 .PHONY: build ubsan qemu64 trace hvf clean count_sectors disassemble
