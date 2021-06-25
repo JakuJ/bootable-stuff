@@ -81,15 +81,25 @@ syscall_handler:
   ; Preserve RIP stored in RCX
   push rcx
 
-  ; C ABI callee-preserved registers
+  ; Save C ABI callee-preserved registers
   push_all
 
-  ; musl's syscall places arg 4 in r10
+  ; musl's syscall places arg 4 in r10,
+  ; so we move it to RCX for SYSV ABI compliance
   mov rcx, r10
+
+  ; Same with arg. 6 - move from RAX to stack
+  push rax
 
   ; Handle syscall in C
   extern handle_syscall
   call handle_syscall
+
+  ; Save return value in RAX for later
+  mov [syscall_retval], rax
+
+  ; Pop that 6th argument from the stack
+  add rsp, 8
 
   ; Restore C ABI callee-preserved registers
   pop_all
@@ -97,12 +107,15 @@ syscall_handler:
   ; Restore RIP for sysret
   pop rcx
 
-  ; sysret will restore from r11 EFLAGS
+  ; sysret will restore EFLAGS from r11
   pop r11 ; TODO: interrupts in ring 3 cause #GP pointing to the TSS
 
   ; Restore OS stack pointer
   mov [kernel_stack_save], rsp
   mov rsp, [user_stack_save]
+
+  ; Remember to place that syscall return value in RAX
+  mov rax, [syscall_retval]
 
   ; Return to ring 3
   o64 sysret
@@ -111,3 +124,4 @@ section .data
 
 kernel_stack_save:  dq 0
 user_stack_save:    dq 0
+syscall_retval:     dq 0

@@ -11,7 +11,8 @@ CFLAGS += -nostdlib -ffreestanding
 CFLAGS += -mno-red-zone -fno-asynchronous-unwind-tables
 CFLAGS += -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2
 CFLAGS += -I src/kernel/include -I src/os/include
-CFLAGS += -I external/musl-1.2.2/include -I external/musl-1.2.2/obj/include -I external/musl-1.2.2/arch/x86_64
+CFLAGS += -I external/musl-1.2.2/include -I external/musl-1.2.2/obj/include
+CFLAGS += -I external/musl-1.2.2/arch/x86_64 -I external/musl-1.2.2/arch/generic
 
 LDFLAGS = -n -Map=map.txt -T linker.ld
 
