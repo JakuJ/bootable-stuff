@@ -56,20 +56,20 @@ GDT64:                              ; Global Descriptor Table (64-bit)
   db 10001111b                      ; Flags, limit 19:16
   db 0                              ; Base (high)
 
-  GDT64_Code_User: equ $ - GDT64    ; The code descriptor for ring 3
-  dw 0xffff                         ; Limit (low)
-  dw 0                              ; Base (low)
-  db 0                              ; Base (middle)
-  db 11111010b                      ; Access (exec/read)
-  db 10101111b                      ; Flags, limit 19:16
-  db 0                              ; Base (high)
-
   GDT64_Data_User: equ $ - GDT64    ; The data descriptor for ring 3
   dw 0xffff                         ; Limit (low)
   dw 0                              ; Base (low)
   db 0                              ; Base (middle)
   db 11110010b                      ; Access (read/write)
   db 10001111b                      ; Flags, limit 19:16
+  db 0                              ; Base (high)
+
+  GDT64_Code_User: equ $ - GDT64    ; The code descriptor for ring 3
+  dw 0xffff                         ; Limit (low)
+  dw 0                              ; Base (low)
+  db 0                              ; Base (middle)
+  db 11111010b                      ; Access (exec/read)
+  db 10101111b                      ; Flags, limit 19:16
   db 0                              ; Base (high)
 
   GDT64_TSS: equ $ - GDT64          ; The task state segment descriptor

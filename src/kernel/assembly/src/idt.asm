@@ -11,13 +11,6 @@ section .text
       push_all
       call irq%[i]_handler
       pop_all
-
-      ; TODO: why is CS 0x2b instead of (GDT64_Code_User OR 3) ?
-      extern GDT64_Code_User
-      mov eax, GDT64_Code_User
-      or eax, 3
-      mov dword [rsp + 8], eax ; filthy hack
-
       iretq
   %assign i i+1
 %endmacro

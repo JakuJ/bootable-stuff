@@ -1,8 +1,9 @@
 # Bootable stuff
 
-**Work in progress.**
-
 This repository contains a two-stage bootloader, an x86_64 kernel, and a ring 3 OS, all written from scratch.
+
+The system is still under development. 
+Does not run DOOM yet.
 
 ![current state](docs/current.png)
 

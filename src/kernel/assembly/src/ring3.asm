@@ -4,6 +4,7 @@ section .text
 
 extern GDT64_TSS
 extern GDT64_Code
+extern GDT64_Data
 extern GDT64_Code_User
 extern GDT64_Data_User
 
@@ -23,8 +24,14 @@ jump_usermode:
 
   ; Setup STAR MSR
   ; Reference: https://www.sandpile.org/x86/msr.htm
+
+  ; Why do we put GDT64_Data in STAR?
+  ; The answer is at https://wiki.osdev.org/SYSENTER:
+  ; "As well, in Long Mode, userland CS will be loaded from STAR 63:48 + 16 on SYSRET.
+  ; Therefore, you might need to setup your GDT accordingly."
+
   mov ecx, 0xc0000081
-  mov edx, GDT64_Code_User
+  mov edx, GDT64_Data
   or edx, 3
   shl edx, 16
   or edx, GDT64_Code

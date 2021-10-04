@@ -13,5 +13,8 @@ int os_main(void) {
     write(1, buf, strlen(buf));
 
     printf("Fun fact: musl's [%s] uses [%s]\n", "printf", "the 'writev' syscall");
+
+    printf("Use the keyboard to type. Press 1 to start the clock, 2 to stop it.\n\n");
+
     return 0;
 }

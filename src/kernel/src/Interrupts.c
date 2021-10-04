@@ -126,7 +126,7 @@ void isr_handler(const ISR_Frame regs) {
 void irq0_handler(void) {
     static unsigned long clock = 0;
     PIC_send_EOI(0);
-    log("Clock: %lu\n", clock++);
+    log("Clock: %lu\r", clock++);
 }
 
 void irq1_handler(void) {
