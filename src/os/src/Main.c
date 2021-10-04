@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <doom.h>
 
 int os_main(void) {
     printf("Sending a syscall without a handler...\n\n");
@@ -14,7 +15,7 @@ int os_main(void) {
 
     printf("Fun fact: musl's [%s] uses [%s]\n", "printf", "the 'writev' syscall");
 
-    printf("Use the keyboard to type. Press 1 to start the clock, 2 to stop it.\n\n");
+    D_DoomMain();
 
     return 0;
 }

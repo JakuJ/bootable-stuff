@@ -1,0 +1,3 @@
+[submodule "ports/doomgeneric"]
+	path = ports/doomgeneric
+	url = https://github.com/ozkl/doomgeneric.git

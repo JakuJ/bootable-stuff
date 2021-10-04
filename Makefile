@@ -22,6 +22,7 @@ KER_FLAGS = $(COM_FLAGS) -I src/kernel/include
 OS_FLAGS = $(COM_FLAGS) -I src/os/include
 OS_FLAGS += -I $(PORTS_DIR)/musl-1.2.2/include -I $(PORTS_DIR)/musl-1.2.2/obj/include
 OS_FLAGS += -I $(PORTS_DIR)/musl-1.2.2/arch/x86_64 -I $(PORTS_DIR)/musl-1.2.2/arch/generic
+OS_FLAGS += -I $(PORTS_DIR)/doomgeneric/doomgeneric
 
 KERNEL_LDFLAGS = -n -Map=map_kernel.txt -T linker_kernel.ld
 OS_LDFLAGS = -n -Map=map_os.txt -T linker_os.ld
@@ -41,6 +42,11 @@ os_c_sources = $(shell find src/os/src -name *.c)
 os_objects = $(patsubst src/os/src/%.c, build/os/%.o, $(os_c_sources))
 musl_object = $(PORTS_DIR)/musl-1.2.2/lib/libc.a
 
+SRC_DOOM = i_main.o dummy.o am_map.o doomdef.o doomstat.o dstrings.o d_event.o d_items.o d_iwad.o d_loop.o d_main.o d_mode.o d_net.o f_finale.o f_wipe.o g_game.o hu_lib.o hu_stuff.o info.o i_cdmus.o i_endoom.o i_joystick.o i_scale.o i_sound.o i_system.o i_timer.o memio.o m_argv.o m_bbox.o m_cheat.o m_config.o m_controls.o m_fixed.o m_menu.o m_misc.o m_random.o p_ceilng.o p_doors.o p_enemy.o p_floor.o p_inter.o p_lights.o p_map.o p_maputl.o p_mobj.o p_plats.o p_pspr.o p_saveg.o p_setup.o p_sight.o p_spec.o p_switch.o p_telept.o p_tick.o p_user.o r_bsp.o r_data.o r_draw.o r_main.o r_plane.o r_segs.o r_sky.o r_things.o sha1.o sounds.o statdump.o st_lib.o st_stuff.o s_sound.o tables.o v_video.o wi_stuff.o w_checksum.o w_file.o w_main.o w_wad.o z_zone.o w_file_stdc.o i_input.o i_video.o doomgeneric.o
+DOOM_DIR = $(PORTS_DIR)/doomgeneric/doomgeneric/build
+
+doom_objects = $(addprefix $(DOOM_DIR)/, $(SRC_DOOM))
+
 kernel_headers = $(shell find src/kernel/include -name *.h)
 os_headers = $(shell find src/os/include -name *.h)
 
@@ -56,7 +62,7 @@ crtend_obj = $(shell $(CC) $(KER_FLAGS) -print-file-name=crtend.o)
 
 bootloader_objs := $(filter-out $(crti_obj) $(crtn_obj),$(bootloader_objs))
 
-os_link_list = $(os_asm_objects) $(os_objects) $(musl_object)
+os_link_list = $(os_asm_objects) $(os_objects) $(doom_objects) $(musl_object)
 os_object = build/os.o
 
 kernel_link_list = $(crti_obj) $(crtbegin_obj) $(bootloader_objs) $(kernel_asm_objects) $(kernel_objects) $(crtend_obj) $(crtn_obj)
@@ -97,6 +103,14 @@ $(musl_object):
 	( cd $(PORTS_DIR)/musl-1.2.2 && \
 		CROSS_COMPILE=x86_64-elf- CC=x86_64-elf-gcc ./configure --target=x86_64 --disable-shared && \
 		make -j )
+
+$(doom_objects): | $(DOOM_DIR)
+
+$(DOOM_DIR):
+	mkdir -p $(DOOM_DIR)
+
+$(DOOM_DIR)/%.o : $(DOOM_DIR)/../%.c
+	$(CC) -c -o $@ $< $(OS_FLAGS) -masm=att -w
 
 # BINARIES - OS
 
