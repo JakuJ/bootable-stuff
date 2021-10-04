@@ -37,3 +37,10 @@ kernel_stack_bottom:
 resb 16384
 kernel_stack_top:
 global kernel_stack_top
+
+; Allocate 16KB of stack space - this time for TSS
+; TODO: Is this actually required? Can I just recycle kernel_stack?
+tss_stack_bottom:
+resb 16384
+tss_stack_top:
+global tss_stack_top

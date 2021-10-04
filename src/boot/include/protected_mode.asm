@@ -121,7 +121,10 @@ enable_sse:
 
   mov eax, cr4
   or eax, 3 << 9		  ; set CR4.OSFXSR and CR4.OSXMMEXCPT at the same time
-  or eax, 1 << 18     ; set CR4.OSXSAVE flag to enable XSAVE (in turn used to enable AVX)
+
+; XSAVE is broken on QEMU 6.1.0, but we do not use AVX anyway
+;  or eax, 1 << 18     ; set CR4.OSXSAVE flag to enable XSAVE (in turn used to enable AVX)
+
   mov cr4, eax
   ret
 

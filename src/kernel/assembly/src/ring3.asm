@@ -10,7 +10,6 @@ extern GDT64_Data_User
 global flush_tss
 flush_tss:
   mov ax, GDT64_TSS   ; tss selector
-  or ax, 3            ; or with 3 to set the RPL (requested privilege level)
   ltr ax              ; load task register
   ret
 
@@ -57,8 +56,6 @@ jump_usermode:
   mov gs, ax                    ; SS is handled by IRET
 
   ; Jump to ring 3
-  cli                           ; we don't want interrupts handled on the user stack
-
   pushf                         ; leave EFLAGS unchanged
   pop r11
 

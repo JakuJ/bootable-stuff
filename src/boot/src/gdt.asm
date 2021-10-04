@@ -74,13 +74,8 @@ GDT64:                              ; Global Descriptor Table (64-bit)
 
   GDT64_TSS: equ $ - GDT64          ; The task state segment descriptor
   GDT64_TSS_ADDR:
-  dw 0                              ; Limit (low) - filled by the kernel
-  dw 0                              ; Base (low) - filled by the kernel
-  db 0                              ; Base (middle) - filled by the kernel
-  db 11101001b                      ; Access (read/write)
-  db 00100000b                      ; Flags, limit 19:16
-  db 0                              ; Base (high) - filled by the kernel
-  dq 0                              ; Padding to 16 bytes
+  dq 0
+  dq 0
 
   GDT64_Pointer:                    ; The GDT pointer
   dw $ - GDT64 - 1                  ; Size
