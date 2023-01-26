@@ -10,7 +10,7 @@ int liballoc_unlock() {
 }
 
 void *liballoc_alloc(int pages) {
-    return vmm_allocate_pages(pages);
+    return vmm_mmap(NULL, pages, true);
 }
 
 int liballoc_free(void *start, size_t pages) {

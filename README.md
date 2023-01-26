@@ -1,11 +1,14 @@
 # Bootable stuff
 
-This repository contains a two-stage bootloader, an x86_64 kernel, and a ring 3 OS, all written from scratch.
+This repository contains a two-stage bootloader, an x86_64 kernel, and a ring 3 OS stub, all written from scratch.
 
-The system is still under development. 
-Does not run DOOM yet.
+The system is under development. 
+Does not run DOOM yet :imp:
 
-![current state](docs/current.png)
+**Latest feature:** `mmap`ing the framebuffer from userspace to draw graphics! 
+The imitation of the DVD logo is rendered by the OS, not the kernel.
+
+![current state](docs/current.gif)
 
 # Running
 
@@ -17,7 +20,7 @@ Make sure you have the required dependencies:
 - x86_64-elf-gcc
 - x86_64-elf-ld
 
-Then
+Then run
 
 ```shell
 make -j qemu64   # anywhere
@@ -35,7 +38,7 @@ to build the image and boot it in QEMU.
 - VGA controller
     - [x] Printing text to the screen
     - [x] Setting VESA modes automatically
-    - [ ] Graphics API
+    - [x] Ability to `mmap` framebuffer from userspace
 - Interrupts
     - [x] IDT setup with PIC remapping
     - [x] Event-based system for handing keyboard interrupts
@@ -49,11 +52,13 @@ to build the image and boot it in QEMU.
 - Operating system
     - [x] Getting to ring 3
     - [x] Handling `syscall`
+    - [x] Handling `malloc`
+      - [ ] with `brk`
+      - [ ] also `free`
     - [x] Porting a libc ([musl](http://musl.libc.org))
-    - [ ] Porting a window manager
-    - [ ] Porting some OpenGL implementation
     - [ ] Porting DOOM
-    - [ ] Finally choosing a name for the OS
+    - [ ] Choosing a better name for the project
+
 # Caveats
 
 ### AVX support

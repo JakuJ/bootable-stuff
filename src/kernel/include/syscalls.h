@@ -2,8 +2,10 @@
 
 #include <stddef.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #define ssize_t int
+#define off_t long
 
 typedef struct {
     void *iov_base;    /* Starting address */
@@ -22,3 +24,9 @@ ssize_t write(int fd, const void *buf, size_t count);
 int ioctl(int fd, int request, ...);
 
 ssize_t writev(int fd, const iovec *iov, int iovcnt);
+
+int open(const char *pathname, int flags);
+
+void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+
+int brk(void *addr);

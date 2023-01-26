@@ -23,8 +23,8 @@ OS_FLAGS = $(COM_FLAGS) -I src/os/include
 OS_FLAGS += -I $(PORTS_DIR)/musl-1.2.2/include -I $(PORTS_DIR)/musl-1.2.2/obj/include
 OS_FLAGS += -I $(PORTS_DIR)/musl-1.2.2/arch/x86_64 -I $(PORTS_DIR)/musl-1.2.2/arch/generic
 
-KERNEL_LDFLAGS = -n -Map=map_kernel.txt -T linker_kernel.ld
-OS_LDFLAGS = -n -Map=map_os.txt -T linker_os.ld
+KERNEL_LDFLAGS = -z noexecstack -n -Map=map_kernel.txt -T linker_kernel.ld
+OS_LDFLAGS = -z noexecstack -n -Map=map_os.txt -T linker_os.ld
 LDFLAGS = -z noexecstack -n -Map=map.txt -T linker.ld
 
 # Source files and corresponding object files

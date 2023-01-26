@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define PIXEL uint32_t
+
 typedef struct {
     uint16_t width, height;
     uint8_t bpp;

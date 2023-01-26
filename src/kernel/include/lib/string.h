@@ -12,3 +12,5 @@ char *itoa(long input, char *buffer, int base);
 char *gcvt(double value, int ndigits, char *buf);
 
 void vsprintf(char *buffer, char const *fmt, va_list args);
+
+int strcmp(const char *str1, const char *str2);

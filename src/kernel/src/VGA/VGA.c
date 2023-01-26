@@ -6,9 +6,10 @@
 #include <PortIO.h>
 #include <lib/liballoc_1_1.h>
 #include <lib/memory.h>
+#include <syscalls.h>
+#include <memory/VMM.h>
 
 #define TAB_SIZE 4
-#define PIXEL uint32_t
 #define TEXT_COLOR 0x00ffffff
 
 typedef struct {
@@ -29,15 +30,9 @@ size_t fb_size;
 
 void vga_init(void) {
     fb_size = vbe_info.height * vbe_info.bytes_per_line;
-    size_t fb_pages = fb_size / PAGE_SIZE;
-
     uintptr_t page = vbe_info.physical_buffer & ~0xfff;
 
-    for (size_t i = 0; i <= fb_pages; i++) {
-        vmm_map_memory(page + i * PAGE_SIZE, page + i * PAGE_SIZE);
-    }
-
-    FRAMEBUFFER = (PIXEL *) (uintptr_t) vbe_info.physical_buffer;
+    FRAMEBUFFER = (PIXEL *) vmm_mmap((void *) page, fb_size / PAGE_SIZE, true);
 
     vga = (VGA) {
             .colMax = vbe_info.width / FONT_WIDTH,
@@ -196,7 +191,8 @@ void log_n(char *buf, size_t n) {
 void vga_info(void) {
     log("Display info:\n");
     log("\tDisplay size: %d x %d x %d\n", vbe_info.width, vbe_info.height, vbe_info.bpp);
-    log("\tFramebuffer at %x physical, size: %lukB\n", vbe_info.physical_buffer, fb_size / 1000);
+    log("\tFramebuffer at %x physical, %p virtual, size: %lukB\n", vbe_info.physical_buffer, FRAMEBUFFER,
+        fb_size / 1000);
     log("\tBytes per pixel: %d, per line: %d\n", vbe_info.bytes_per_pixel, vbe_info.bytes_per_line);
     log("\tCursor range: %d x %d\n", vbe_info.x_cur_max, vbe_info.y_cur_max);
     log("\tTeletype range: %d x %d\n", vga.colMax, vga.rowMax);

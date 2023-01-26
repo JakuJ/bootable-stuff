@@ -49,7 +49,7 @@ static inline void flush_tlb(void *addr) {
     asm volatile("invlpg [%0]"::"r"((unsigned long) addr) :"memory");
 }
 
-void vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
+static void vmm_map_memory(uintptr_t physical, uintptr_t virtual, uint64_t flags) {
     unsigned int pt4_index = (virtual >> 39) & 0x1ff;
     unsigned int pt3_index = (virtual >> 30) & 0x1ff;
     unsigned int pt2_index = (virtual >> 21) & 0x1ff;
@@ -64,7 +64,9 @@ void vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
         PT *pt3 = allocate_page_table();
 
         // Point P4 entry to that P3 table
-        pt4->entries[pt4_index] = (uint64_t) pt3 | DIRECTORY_DEFAULTS;
+        pt4->entries[pt4_index] = (uint64_t) pt3 | flags;
+    } else {
+        pt4->entries[pt4_index] = (pt4->entries[pt4_index] & ~0xfff) | flags;
     }
 
     // Check P3 entry
@@ -74,7 +76,9 @@ void vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
         PT *pt2 = allocate_page_table();
 
         // Point P3 entry to that P2 table
-        pt3->entries[pt3_index] = (uint64_t) pt2 | DIRECTORY_DEFAULTS;
+        pt3->entries[pt3_index] = (uint64_t) pt2 | flags;
+    } else {
+        pt3->entries[pt3_index] = (pt3->entries[pt3_index] & ~0xfff) | flags;
     }
 
     // Check P2 entry
@@ -84,7 +88,9 @@ void vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
         PT *page_table = allocate_page_table();
 
         // Point P2 entry to that P1 table
-        pt2->entries[pt2_index] = (uint64_t) page_table | DIRECTORY_DEFAULTS;
+        pt2->entries[pt2_index] = (uint64_t) page_table | flags;
+    } else {
+        pt2->entries[pt2_index] = (pt2->entries[pt2_index] & ~0xfff) | flags;
     }
 
     // Check P1 (page table) entry
@@ -95,19 +101,30 @@ void vmm_map_memory(uintptr_t physical, uintptr_t virtual) {
             physical = (uintptr_t) pmm_allocate_page();
         }
 
-        page_table->entries[page_index] = physical | DIRECTORY_DEFAULTS | NO_EXEC_BIT;
-
-        flush_tlb((void *) physical);
+        page_table->entries[page_index] = physical | flags | NO_EXEC_BIT;
+    } else {
+        page_table->entries[page_index] = (page_table->entries[page_index] & ~0xfff) | flags | NO_EXEC_BIT;
     }
+
+    flush_tlb((void *) physical);
 
     if (interrupts) {
         enable_interrupts();
     }
 }
 
-static void ensure_pages_present(void *vstart, size_t pages) {
+static void ensure_pages_mapped(void *physical, void *vstart, size_t pages, uint64_t flags) {
+    void* arg_phys = physical;
     for (size_t i = 0; i < pages; i++) {
-        vmm_map_memory(0, (uintptr_t) vstart + i * PAGE_SIZE);
+        vmm_map_memory(physical, (uintptr_t) vstart + i * PAGE_SIZE, flags);
+        if (physical != NULL) {
+            physical += PAGE_SIZE;
+        }
+    }
+    if (physical == NULL) {
+        log("[VMM] Mapped fresh pages to %p (%lu pages) (flags: %x)\n", vstart, pages, flags);
+    } else {
+        log("[VMM] Mapped %p to %p (%lu pages) (flags: %x)\n", arg_phys, vstart, pages, flags);
     }
 }
 
@@ -141,7 +158,7 @@ static void print_blockchain(void) {
 
 size_t pages_allocated_for_blockchain;
 
-void *vmm_allocate_pages(size_t pages) {
+void *vmm_mmap(void *physical, size_t pages, bool is_kernel) {
     if (!blockchain) {
         if (first_alloc) {
             // We need to allocate the blockchain first
@@ -160,7 +177,7 @@ void *vmm_allocate_pages(size_t pages) {
                 pages_allocated_for_blockchain = pages;
 
                 void *start = (void *) HEAP_START;
-                ensure_pages_present(start, pages);
+                ensure_pages_mapped(NULL, start, pages, DIRECTORY_DEFAULTS);
                 return start;
             }
         } else {
@@ -181,7 +198,8 @@ void *vmm_allocate_pages(size_t pages) {
     }
 
     void *span_start = (void *) block->start;
-    ensure_pages_present(span_start, pages);
+    uint64_t flags = DIRECTORY_DEFAULTS | (is_kernel ? 0 : USER_ACCESS_BIT);
+    ensure_pages_mapped(physical, span_start, pages, flags);
 
     // shrink the block
     block->start += pages * PAGE_SIZE;
