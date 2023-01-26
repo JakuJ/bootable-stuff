@@ -25,7 +25,7 @@ typedef struct {
     uint16_t iopb_offset;
 } __attribute__((packed)) tss_t;
 
-extern uintptr_t GDT64_TSS_ADDR;
+extern tss_entry_t GDT64_TSS_ADDR;
 tss_t tss;
 
 extern uintptr_t kernel_stack_top;
